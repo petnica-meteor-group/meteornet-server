@@ -3,9 +3,10 @@ from django.core.exceptions import PermissionDenied
 from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
-from django.contrib.auth import authenticate
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.utils import timezone
+from django.contrib.auth import authenticate, login as django_login, logout as django_logout
+from django.contrib import messages
 
 import json
 
@@ -26,6 +27,23 @@ def format_last_updated(station):
         return str(minutes) + " minute ago."
     else:
         return "Less than a minute ago."
+
+@require_http_methods(["POST"])
+def login(request):
+    username = request.POST['username']
+    password = request.POST['password']
+    user = authenticate(request, username=username, password=password)
+    if user is not None:
+        django_login(request, user)
+        return redirect('/')
+    else:
+        messages.add_message(request, messages.ERROR, "Wrong credentials")
+        return redirect('/')
+
+@require_http_methods(["POST"])
+def logout(request):
+    django_logout(request)
+    return redirect('/')
 
 @require_http_methods(["GET"])
 def index(request):

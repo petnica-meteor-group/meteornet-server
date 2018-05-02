@@ -24,7 +24,7 @@ body {
     outline: 0;
 }
 
-#login-btn {
+.login-btn {
     font-size: 15px;
     padding-right: 18px;
 }

@@ -34,62 +34,80 @@
         </div>
         <div class="navbar-collapse collapse w-100 order-3 dual-collapse2">
             <ul class="navbar-nav ml-auto">
+                {% if user.is_authenticated %}
+                <li class="nav-item">
+                    <form class="form" role="form" method="post" action="logout" accept-charset="UTF-8" id="login-nav">
+                        {% csrf_token %}
+                        <a href="#" class="login-btn" onclick="$(this).closest('form').submit()">Logout</a>
+                    </form>
+                </li>
+                {% else %}
                 <li class="nav-item dropdown">
-                    <a href="#" id="login-btn" class="dropdown-toggle" data-toggle="dropdown">Login</a>
+                    <a href="#" class="dropdown-toggle login-btn" data-toggle="dropdown">Login</a>
                     <ul id="login-dp" class="dropdown-menu dropdown-menu-right">
                         <li>
                              <div class="row">
                                 <div class="col-md-12">
-                                     <form class="form" role="form" method="post" action="login" accept-charset="UTF-8" id="login-nav">
-                                            <div class="form-group">
-                                                 <label class="sr-only" for="username-input">Username</label>
-                                                 <input type="email" class="form-control" id="username-input" placeholder="Username" required/>
-                                            </div>
-                                            <div class="form-group">
-                                                 <label class="sr-only" for="password-input">Password</label>
-                                                 <input type="password" class="form-control" id="password-input" placeholder="Password" required/>
-                                            </div>
-                                            <div class="form-group">
-                                                 <button type="submit" class="btn btn-block">Login</button>
-                                            </div>
-                                     </form>
+                                    <form class="form" role="form" method="post" action="login" accept-charset="UTF-8" id="login-nav">
+                                        {% csrf_token %}
+                                        <div class="form-group">
+                                             <label class="sr-only" for="username">Username</label>
+                                             <input class="form-control" id="username" name="username" placeholder="Username" required/>
+                                        </div>
+                                        <div class="form-group">
+                                             <label class="sr-only" for="password">Password</label>
+                                             <input type="password" class="form-control" id="password" name="password" placeholder="Password" required/>
+                                        </div>
+                                        <div class="form-group">
+                                             <button type="submit" class="btn btn-block">Login</button>
+                                        </div>
+                                    </form>
                                 </div>
                              </div>
                         </li>
         			</ul>
                 </li>
+                {% endif %}
             </ul>
         </div>
     </nav>
 
     <div class="container-fluid station-container">
-    {% if user.is_authenticated == False %}
-        {% for row in station_rows %}
-        <div class="row">
-            <div class="col-2"></div>
-            {% for station, last_updated in row %}
-            <div class="col-4 card-frame">
-                <div class="card">
-                    <div class="card-header">
-                    {{ station.name }}
-                    </div>
-                    <div class="card-body">
-                        <ul>
-                            <li>Disk: {{ station.disk_used }}GB / {{ station.disk_cap }}GB</li>
-                            <li>Temperature: {{ station.temperature }}°</li>
-                            <li>Humidity: {{ station.humidity }}%</li>
-                        </ul>
-                        Last updated: {{ last_updated }}
+        {% if messages %}
+        <ul class="messages" align="center">
+            {% for message in messages %}
+            <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+
+        {% if user.is_authenticated %}
+            {% for row in station_rows %}
+            <div class="row">
+                <div class="col-2"></div>
+                {% for station, last_updated in row %}
+                <div class="col-4 card-frame">
+                    <div class="card">
+                        <div class="card-header">
+                        {{ station.name }}
+                        </div>
+                        <div class="card-body">
+                            <ul>
+                                <li>Disk: {{ station.disk_used }}GB / {{ station.disk_cap }}GB</li>
+                                <li>Temperature: {{ station.temperature }}°</li>
+                                <li>Humidity: {{ station.humidity }}%</li>
+                            </ul>
+                            Last updated: {{ last_updated }}
+                        </div>
                     </div>
                 </div>
+                {% endfor %}
+                <div class="col-2"></div>
             </div>
             {% endfor %}
-            <div class="col-2"></div>
-        </div>
-        {% endfor %}
-    {% else %}
-        <p align="center" style="padding-top: 100px;">You need to login first.</p>
-    {% endif %}
+        {% else %}
+            <p align="center" style="padding-top: 100px;">You need to login first.</p>
+        {% endif %}
     </div>
 
     <div class="container-fluid">
