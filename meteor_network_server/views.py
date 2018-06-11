@@ -39,12 +39,24 @@ def logout(request):
 def format_last_updated(station):
     minutes = int((timezone.now() - station.last_updated).total_seconds() // 60)
 
-    if minutes > 1:
-        return str(minutes) + " minutes ago."
+    if minutes < 1:
+        return "Less than a minute ago."
     elif minutes == 1:
         return str(minutes) + " minute ago."
+    elif minutes > 1 and minutes < 60:
+        return str(minutes) + " minutes ago."
     else:
-        return "Less than a minute ago."
+        hours = minutes // 60
+        if hours == 1:
+            return str(hours) + " hour ago."
+        elif hours > 1 and hours < 24:
+            return str(hours) + " hours ago."
+        else:
+            days = hours // 24
+            if days == 1:
+                return str(days) + " day ago."
+            else:
+                return str(days) + " days ago."
 
 @require_http_methods(["GET"])
 def index(request):
