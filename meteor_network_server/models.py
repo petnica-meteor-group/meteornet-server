@@ -1,1 +1,1 @@
-from .telemetry import station
+from .telemetry import stations

@@ -32,3 +32,7 @@ for template in ${templates[@]}; do
 
     ((counter++))
 done;
+
+mkdir -p logs
+touch logs/system.log
+touch logs/system.log.1

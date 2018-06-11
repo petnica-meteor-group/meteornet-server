@@ -27,9 +27,9 @@
             </ul>
         </div>
         <div class="mx-auto order-0">
-            <a class="navbar-brand mx-auto meow" href="">
+            <a class="navbar-brand mx-auto" href="">
                 <img height="40" src="{% static 'img/logo.png' %}"/>
-                &nbsp;<span class="title">Meteor Network of Serbia</span>
+                &nbsp;<span class="title">Petnica Meteor Network</span>
             </a>
         </div>
         <div class="navbar-collapse collapse w-100 order-3 dual-collapse2">
@@ -85,7 +85,7 @@
             {% for row in station_rows %}
             <div class="row">
                 <div class="col-2"></div>
-                {% for station, last_updated in row %}
+                {% for station, last_updated, available in row %}
                 <div class="col-4 card-frame">
                     <div class="card">
                         <div class="card-header">
@@ -93,9 +93,15 @@
                         </div>
                         <div class="card-body">
                             <ul>
+                                {% if available.disk %}
                                 <li>Disk: {{ station.disk_used }}GB / {{ station.disk_cap }}GB</li>
+                                {% endif %}
+                                {% if available.temperature %}
                                 <li>Temperature: {{ station.temperature }}°</li>
+                                {% endif %}
+                                {% if available.humidity %}
                                 <li>Humidity: {{ station.humidity }}%</li>
+                                {% endif %}
                             </ul>
                             Last updated: {{ last_updated }}
                         </div>

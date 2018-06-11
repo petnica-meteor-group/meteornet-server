@@ -1,9 +1,5 @@
 #!/bin/bash
 
-mkdir -p logs
-touch logs/system.log
-touch logs/system.log.1
-
 source config.sh
 
 sudo python manage.py collectstatic --noinput
