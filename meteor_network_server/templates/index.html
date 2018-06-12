@@ -85,7 +85,7 @@
             {% for row in station_rows %}
             <div class="row">
                 <div class="col-2"></div>
-                {% for station, last_updated, available in row %}
+                {% for station, last_updated in row %}
                 <div class="col-4 card-frame">
                     <div class="card">
                         <div class="card-header">
@@ -93,17 +93,32 @@
                         </div>
                         <div class="card-body">
                             <ul>
-                                {% if available.disk %}
+                                {% if station.disk_used != None and station.disk_cap != None %}
                                 <li>Disk: {{ station.disk_used }}GB / {{ station.disk_cap }}GB</li>
                                 {% endif %}
-                                {% if available.temperature %}
+                                {% if station.temperature != None %}
                                 <li>Temperature: {{ station.temperature }}°</li>
                                 {% endif %}
-                                {% if available.humidity %}
+                                {% if station.humidity != None %}
                                 <li>Humidity: {{ station.humidity }}%</li>
                                 {% endif %}
                             </ul>
                             Last updated: {{ last_updated }}
+                            {% if station.host != None %}
+                            <br/>
+                            <ul>
+                                <li>Host: {{ station.host.name }}</li>
+                                {% if station.host.email != None %}
+                                <li>Email: {{ station.host.email }}°</li>
+                                {% endif %}
+                                {% if station.host.phone != None %}
+                                <li>Phone: {{ station.host.phone }}%</li>
+                                {% endif %}
+                                {% if station.host.comment != None %}
+                                <li>Comment: {{ station.host.comment }}%</li>
+                                {% endif %}
+                            </ul>
+                            {% endif %}
                         </div>
                     </div>
                 </div>

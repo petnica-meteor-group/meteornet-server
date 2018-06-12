@@ -67,21 +67,10 @@ def index(request):
         row = []
 
         station = station_list[i]
-        available = {
-            'disk' : not math.isnan(station.disk_used) and not math.isnan(station.disk_cap),
-            'temperature' : not math.isnan(station.temperature),
-            'humidity' : not math.isnan(station.humidity)
-        }
-
-        row.append((station, format_last_updated(station), available))
+        row.append((station, format_last_updated(station)))
         if i < len(station_list) - 1:
             station = station_list[i + 1]
-            available = {
-                'disk' : not math.isnan(station.disk_used) and not math.isnan(station.disk_cap),
-                'temperature' : not math.isnan(station.temperature),
-                'humidity' : not math.isnan(station.humidity)
-            }
-            row.append((station, format_last_updated(station), available))
+            row.append((station, format_last_updated(station)))
 
         station_rows.append(row)
 
