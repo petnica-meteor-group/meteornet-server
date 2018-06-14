@@ -15,6 +15,7 @@ from .telemetry import stations
 
 STATION_PARAM_ID = "id"
 STATION_PARAM_DATA = "data"
+STATION_PARAM_ERROR = "error"
 
 RESPONSE_SUCCESS = "success"
 RESPONSE_FAILTURE = "failure"
@@ -67,10 +68,12 @@ def index(request):
         row = []
 
         station = station_list[i]
-        row.append((station, format_last_updated(station)))
+        error_reported = len(stations.get_errors(station.id)) > 0
+        row.append((station, format_last_updated(station), error_reported))
         if i < len(station_list) - 1:
             station = station_list[i + 1]
-            row.append((station, format_last_updated(station)))
+            error_reported = len(stations.get_errors(station.id)) > 0
+            row.append((station, format_last_updated(station), error_reported))
 
         station_rows.append(row)
 
@@ -98,10 +101,21 @@ def station_update(request):
     id = request.POST[STATION_PARAM_ID]
     data = json.loads(request.POST[STATION_PARAM_DATA])
 
-    station = stations.get(id)
-    if station == None:
+    if stations.update(id, data):
+        return HttpResponse(RESPONSE_SUCCESS)
+    else:
+        return HttpResponse(RESPONSE_FAILIURE)
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def station_error(request):
+    if (not STATION_PARAM_ID in request.POST) or (not STATION_PARAM_ERROR in request.POST):
         return HttpResponse(RESPONSE_FAILTURE)
 
-    stations.update(id, data)
+    id = request.POST[STATION_PARAM_ID]
+    error = request.POST[STATION_PARAM_ERROR]
 
-    return HttpResponse(RESPONSE_SUCCESS)
+    if stations.error(id, error):
+        return HttpResponse(RESPONSE_SUCCESS)
+    else:
+        return HttpResponse(RESPONSE_FAILIURE)

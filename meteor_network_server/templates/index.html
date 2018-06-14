@@ -85,7 +85,7 @@
             {% for row in station_rows %}
             <div class="row">
                 <div class="col-2"></div>
-                {% for station, last_updated in row %}
+                {% for station, last_updated, error_reported in row %}
                 <div class="col-4 card-frame">
                     <div class="card">
                         <div class="card-header">
@@ -117,6 +117,11 @@
                             </ul>
                             Last updated: {{ last_updated }}
                             {% if station.host != None %}
+                            {% endif %}
+                            {% if error_reported %}
+                            <br/>
+                            <br/>
+                            <font color="red">Station has reported error(s)!</font>
                             {% endif %}
                         </div>
                     </div>

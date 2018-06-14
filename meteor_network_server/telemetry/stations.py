@@ -21,6 +21,10 @@ class TelemetryLog(models.Model):
     station = models.ForeignKey(Station, on_delete=models.CASCADE)
     timestamp = models.DateTimeField(default=timezone.now)
 
+class StationError(models.Model):
+    station = models.ForeignKey(Station, on_delete=models.CASCADE)
+    error = models.TextField(max_length=512)
+
 def register(data):
     found_stations = Station.objects.filter(name=data['name'])
 
@@ -65,6 +69,9 @@ def get(id):
 
 def update(id, data):
     station = get(id)
+    if station == None:
+        return False
+
     if 'name' in data: station.name = data['name']
 
     telemetry_log = TelemetryLog()
@@ -92,11 +99,13 @@ def update(id, data):
     if 'host' in data:
         host_data = data['host']
 
-        if 'email' in host_data and Host.objects.filter(email=host_data['email']).exists():
+        host = None
+        if 'email' in host_data:
             host = Host.objects.get(email=host_data['email'])
-        elif 'name' in host_data and Host.objects.filter(name=host_data['name']).exists():
+        elif 'name' in host_data:
             host = Host.objects.get(name=host_data['name'])
-        else:
+
+        if host == None:
             host = Host()
 
         if 'name' in host_data: host.name = host_data['name']
@@ -119,5 +128,22 @@ def update(id, data):
     station.last_updated = timezone.now()
     station.save()
 
+    return True
+
+def error(id, error):
+    station = get(id)
+    if station == None:
+        return False
+
+    station_error = StationError()
+    station_error.station = station
+    station_error.error = error
+    station_error.save()
+
+    return True
+
 def get_current_list():
     return Station.objects.all()
+
+def get_errors(id):
+    return StationError.objects.filter(station=id)
