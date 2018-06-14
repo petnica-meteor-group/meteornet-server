@@ -94,30 +94,29 @@
                         <div class="card-body">
                             <ul>
                                 {% if station.disk_used != None and station.disk_cap != None %}
-                                <li>Disk: {{ station.disk_used }}GB / {{ station.disk_cap }}GB</li>
+                                <li>Disk: {{ station.disk_used|floatformat:1 }}GB / {{ station.disk_cap|floatformat:1 }}GB</li>
                                 {% endif %}
                                 {% if station.temperature != None %}
-                                <li>Temperature: {{ station.temperature }}°</li>
+                                <li>Temperature: {{ station.temperature|floatformat:1 }}°</li>
                                 {% endif %}
                                 {% if station.humidity != None %}
-                                <li>Humidity: {{ station.humidity }}%</li>
+                                <li>Humidity: {{ station.humidity|floatformat:1 }}%</li>
+                                {% endif %}
+                            </ul>
+                            <ul>
+                                <li>Host: {{ station.host.name }}</li>
+                                {% if station.host.email != None %}
+                                <li>Email: {{ station.host.email }}</li>
+                                {% endif %}
+                                {% if station.host.phone != None %}
+                                <li>Phone: {{ station.host.phone }}</li>
+                                {% endif %}
+                                {% if station.host.comment != None %}
+                                <li>Comment: {{ station.host.comment }}</li>
                                 {% endif %}
                             </ul>
                             Last updated: {{ last_updated }}
                             {% if station.host != None %}
-                            <br/>
-                            <ul>
-                                <li>Host: {{ station.host.name }}</li>
-                                {% if station.host.email != None %}
-                                <li>Email: {{ station.host.email }}°</li>
-                                {% endif %}
-                                {% if station.host.phone != None %}
-                                <li>Phone: {{ station.host.phone }}%</li>
-                                {% endif %}
-                                {% if station.host.comment != None %}
-                                <li>Comment: {{ station.host.comment }}%</li>
-                                {% endif %}
-                            </ul>
                             {% endif %}
                         </div>
                     </div>

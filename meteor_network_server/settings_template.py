@@ -81,7 +81,7 @@ WSGI_APPLICATION = '<main_app>.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'mnsdb',
+        'NAME': 'pmndb',
         'USER': 'postgres',
         'PASSWORD': open(path.join(path.dirname(path.abspath(__file__)), 'db_password')).read().splitlines()[0],
         'HOST': '127.0.0.1',
