@@ -56,10 +56,11 @@ def register(data):
         if 'phone' in host_data: host.phone = host_data['phone']
         if 'email' in host_data: host.email = host_data['email']
         if 'comment' in host_data: host.comment = host_data['comment']
-        host.save()
 
+        host.save()
         station.host = host
 
+    station.last_updated = timezone.now()
     station.save()
 
     return station.id
