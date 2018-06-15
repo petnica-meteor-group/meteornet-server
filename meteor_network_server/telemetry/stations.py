@@ -25,68 +25,24 @@ class StationError(models.Model):
     station = models.ForeignKey(Station, on_delete=models.CASCADE)
     error = models.TextField(max_length=512)
 
-def register(data):
-    found_stations = Station.objects.filter(name=data['name'])
-
-    if len(found_stations) > 0:
-        station = found_stations[0]
-    else:
-        id = uuid.uuid4().hex
-
-        station = Station()
-        station.id = id
-
-    if 'name' in data: station.name = data['name']
-    if 'temperature' in data: station.temperature = data['temperature']
-    if 'humidity' in data: station.humidity = data['humidity']
-    if 'disk_used' in data: station.disk_used = data['disk_used']
-    if 'disk_cap' in data: station.disk_cap = data['disk_cap']
-
-    if 'host' in data:
-        host_data = data['host']
-
-        if 'email' in host_data and Host.objects.filter(email=host_data['email']).exists():
-            host = Host.objects.get(email=host_data['email'])
-        elif 'name' in host_data and Host.objects.filter(name=host_data['name']).exists():
-            host = Host.objects.get(name=host_data['name'])
-        else:
-            host = Host()
-
-        if 'name' in host_data: host.name = host_data['name']
-        if 'phone' in host_data: host.phone = host_data['phone']
-        if 'email' in host_data: host.email = host_data['email']
-        if 'comment' in host_data: host.comment = host_data['comment']
-
-        host.save()
-        station.host = host
-
-    station.last_updated = timezone.now()
-    station.save()
-
-    return station.id
-
-def get(id):
-    return Station.objects.get(id=id)
-
-def update(id, data):
-    station = get(id)
-    if station == None:
-        return False
-
+def update_station_data(station, data):
     if 'name' in data: station.name = data['name']
 
     telemetry_log = TelemetryLog()
+
     telemetry_log.station = station
     if 'temperature' in data:
         station.temperature = data['temperature']
         telemetry_log.temperature = data['temperature']
     else:
         station.temperature = None
+
     if 'humidity' in data:
         station.humidity = data['humidity']
         telemetry_log.humidity = data['humidity']
     else:
         station.humidity = None
+
     telemetry_log.timestamp = timezone.now()
     telemetry_log.save()
 
@@ -128,6 +84,28 @@ def update(id, data):
 
     station.last_updated = timezone.now()
     station.save()
+
+def register(data):
+    station = None
+    if 'name' in data: station = Station.objects.get(name=data['name'])
+    if station == None:
+        id = uuid.uuid4().hex
+        station = Station()
+        station.id = id
+
+    update_station_data(station, data)
+
+    return station.id
+
+def get(id):
+    return Station.objects.get(id=id)
+
+def update(id, data):
+    station = get(id)
+    if station == None:
+        return False
+
+    update_station_data(station, data)
 
     return True
 
