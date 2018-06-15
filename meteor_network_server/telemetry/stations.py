@@ -1,5 +1,6 @@
 from django.db import models
 from django.utils import timezone
+from django.core.exceptions import ObjectDoesNotExist
 from datetime import timedelta
 from .hosts import Host
 
@@ -8,6 +9,9 @@ import uuid
 class Station(models.Model):
     id = models.CharField(max_length=32, primary_key=True)
     name = models.CharField(max_length=128, default="Unnamed Station")
+    latitude = models.FloatField(default=None, null=True)
+    longitude = models.FloatField(default=None, null=True)
+    height = models.FloatField(default=None, null=True)
     temperature = models.FloatField(default=None, null=True)
     humidity = models.FloatField(default=None, null=True)
     disk_used = models.FloatField(default=None, null=True)
@@ -28,6 +32,19 @@ class StationError(models.Model):
 def update_station_data(station, data):
     if 'name' in data: station.name = data['name']
 
+    if 'latitude' in data:
+        station.latitude = data['latitude']
+    else:
+        station.latitude = None
+    if 'longitude' in data:
+        station.longitude = data['longitude']
+    else:
+        station.longitude = None
+    if 'height' in data:
+        station.height = data['height']
+    else:
+        station.height = None
+
     telemetry_log = TelemetryLog()
 
     telemetry_log.station = station
@@ -44,7 +61,6 @@ def update_station_data(station, data):
         station.humidity = None
 
     telemetry_log.timestamp = timezone.now()
-    telemetry_log.save()
 
     if 'disk_used' in data and 'disk_cap' in data:
         station.disk_used = data['disk_used']
@@ -56,11 +72,13 @@ def update_station_data(station, data):
     if 'host' in data:
         host_data = data['host']
 
-        host = None
-        if 'email' in host_data:
-            host = Host.objects.get(email=host_data['email'])
-        elif 'name' in host_data:
-            host = Host.objects.get(name=host_data['name'])
+        try:
+            if 'email' in host_data:
+                host = Host.objects.get(email=host_data['email'])
+            elif 'name' in host_data:
+                host = Host.objects.get(name=host_data['name'])
+        except Host.DoesNotExist:
+            host = None
 
         if host == None:
             host = Host()
@@ -84,10 +102,14 @@ def update_station_data(station, data):
 
     station.last_updated = timezone.now()
     station.save()
+    telemetry_log.save()
 
 def register(data):
-    station = None
-    if 'name' in data: station = Station.objects.get(name=data['name'])
+    try:
+        if 'name' in data: station = Station.objects.get(name=data['name'])
+    except Station.DoesNotExist:
+        station = None
+
     if station == None:
         id = uuid.uuid4().hex
         station = Station()
@@ -101,8 +123,9 @@ def get(id):
     return Station.objects.get(id=id)
 
 def update(id, data):
-    station = get(id)
-    if station == None:
+    try:
+        station = get(id)
+    except Station.DoesNotExist:
         return False
 
     update_station_data(station, data)
