@@ -77,7 +77,7 @@ def index(request):
 
         station_rows.append(row)
 
-    context = { 'station_rows' : station_rows }
+    context = { 'station_rows' : station_rows, 'settings' : settings }
     return render(request, 'index.html', context)
 
 @csrf_exempt

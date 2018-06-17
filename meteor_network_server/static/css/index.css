@@ -9,7 +9,7 @@ body {
 .footer {
     text-align: center;
     font-size: 12px;
-    margin: 12px;
+    color: black;
 }
 
 .footer a:link, .footer a:visited, .footer a:hover, .footer a:active {

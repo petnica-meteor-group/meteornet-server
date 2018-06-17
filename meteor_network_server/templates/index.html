@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>Petnica Meteor Network</title>
+    <title>{{ settings.NETWORK_NAME }}</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
@@ -29,7 +29,7 @@
         <div class="mx-auto order-0">
             <a class="navbar-brand mx-auto" href="">
                 <img height="40" src="{% static 'img/logo.png' %}"/>
-                &nbsp;<span class="title">Petnica Meteor Network</span>
+                &nbsp;<span class="title">{{ settings.NETWORK_NAME }}</span>
             </a>
         </div>
         <div class="navbar-collapse collapse w-100 order-3 dual-collapse2">
@@ -146,7 +146,12 @@
 
     <div class="container-fluid">
         <div class="row footer">
-            <a class="col-12" href="http://www.meteori.rs">Petnica Meteor Group</a>
+            <div class="col-12"><a href="http://www.meteori.rs">Petnica Meteor Group</a></div>
+            <div class="col-12">
+                Contact:
+                Vladimir Nikolić (<a href="mailto:vladimir.nik94@gmail.com">vladimir.nik94@gmail.com</a>),
+                Stevan Golubović (<a href="mailto:stevan.golubovic@gmail.com">stevan.golubovic@gmail.com</a>)
+            </div>
         </div>
     </div>
 
