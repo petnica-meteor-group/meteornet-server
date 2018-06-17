@@ -2,13 +2,13 @@
 
 PROJECT_DIR="$( cd "$(dirname "$0")" ; pwd -P )"
 MAIN_APP=meteor_network_server
-DOMAIN_NAME=pmn.rs
+DOMAIN_NAME=mns.rs
 STATIC_DIR=/srv/http/$MAIN_APP/static
 MEDIA_DIR=/srv/http/$MAIN_APP/media
 
 NGINX_SERVERS_DIR=/etc/nginx/sites-enabled
 SOCKET_PATH=/tmp/$MAIN_APP.sock
-NGINX_USER=http
+NGINX_USER=www-data
 
 templates=("nginx_template.conf" "uwsgi_template.ini" "settings_template.py")
 configs=("nginx.conf" "uwsgi.ini" "settings.py")
