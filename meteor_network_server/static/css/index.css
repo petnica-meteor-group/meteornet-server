@@ -66,3 +66,11 @@ body {
 .card-frame {
     padding: 12px;
 }
+
+.station-name {
+    font-weight: bold;
+}
+
+.station-location {
+    font-size: 12px;
+}

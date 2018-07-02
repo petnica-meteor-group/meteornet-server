@@ -89,19 +89,15 @@
                 <div class="col-4 card-frame">
                     <div class="card">
                         <div class="card-header">
-                        {{ station.name }}
+                        <span class="station-name">{{ station.name }}</span>
+                        <span class="station-location">
+                        {% if station.latitude != None %}
+                            ϕ: {{ station.latitude|floatformat:2 }}{% if station.longitude != None %}, λ: {{ station.longitude|floatformat:2 }}{% if station.height != None %}, Height: {{ station.height|floatformat:1 }}m{% endif %}{% endif %}
+                        {% endif %}
+                        </span>
                         </div>
                         <div class="card-body">
                             <ul>
-                                {% if station.latitude != None %}
-                                <li>ϕ: {{ station.latitude|floatformat:2 }}°</li>
-                                {% endif %}
-                                {% if station.longitude != None %}
-                                <li>λ: {{ station.longitude|floatformat:2 }}°</li>
-                                {% endif %}
-                                {% if station.height != None %}
-                                <li>Height: {{ station.height|floatformat:1 }}m</li>
-                                {% endif %}
                                 {% if station.disk_used != None and station.disk_cap != None %}
                                 <li>Disk: {{ station.disk_used|floatformat:1 }}GB / {{ station.disk_cap|floatformat:1 }}GB</li>
                                 {% endif %}
