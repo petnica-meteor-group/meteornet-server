@@ -84,7 +84,7 @@ def index(request):
 @require_http_methods(["POST"])
 def station_register(request):
     if not STATION_PARAM_DATA in request.POST:
-        return HttpResponse(RESPONSE_FAILTURE)
+        return HttpResponse(RESPONSE_FAILURE)
 
     data = json.loads(request.POST[STATION_PARAM_DATA])
 
@@ -104,13 +104,13 @@ def station_update(request):
     if stations.update(id, data):
         return HttpResponse(RESPONSE_SUCCESS)
     else:
-        return HttpResponse(RESPONSE_FAILIURE)
+        return HttpResponse(RESPONSE_FAILURE)
 
 @csrf_exempt
 @require_http_methods(["POST"])
 def station_error(request):
     if (not STATION_PARAM_ID in request.POST) or (not STATION_PARAM_ERROR in request.POST):
-        return HttpResponse(RESPONSE_FAILTURE)
+        return HttpResponse(RESPONSE_FAILURE)
 
     id = request.POST[STATION_PARAM_ID]
     error = request.POST[STATION_PARAM_ERROR]
@@ -118,4 +118,4 @@ def station_error(request):
     if stations.error(id, error):
         return HttpResponse(RESPONSE_SUCCESS)
     else:
-        return HttpResponse(RESPONSE_FAILIURE)
+        return HttpResponse(RESPONSE_FAILURE)
