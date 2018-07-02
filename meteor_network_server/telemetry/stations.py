@@ -145,7 +145,7 @@ def error(id, error):
     return True
 
 def get_current_list():
-    return Station.objects.all()
+    return Station.objects.order_by('name')
 
 def get_errors(id):
     return StationError.objects.filter(station=id)
