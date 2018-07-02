@@ -16,13 +16,15 @@ from os import path
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = path.dirname(path.dirname(path.abspath(__file__)))
 
-NETWORK_NAME = "Meteor Network of Serbia"
+NETWORK_NAME = "Petnica Meteor Network"
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/2.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = open(path.join(path.dirname(path.abspath(__file__)), 'secret_key')).read().splitlines()[0]
+
+HTTPS = True
 
 # SECURITY WARNING: don't run with debug turned on in production!
 if os.environ.get('DJANGO_DEBUG'):
@@ -82,7 +84,7 @@ WSGI_APPLICATION = '<main_app>.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'mnsdb',
+        'NAME': 'pmndb',
         'USER': 'postgres',
         'PASSWORD': open(path.join(path.dirname(path.abspath(__file__)), 'db_password')).read().splitlines()[0],
         'HOST': '127.0.0.1',
@@ -137,7 +139,7 @@ SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = 'DENY'
 
 # HTTPS
-if not DEBUG:
+if HTTPS and not DEBUG:
     SECURE_SSL_REDIRECT = True
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
