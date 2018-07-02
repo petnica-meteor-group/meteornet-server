@@ -3,9 +3,14 @@
 PROJECT_DIR="$( cd "$(dirname "$0")" ; pwd -P )"
 MAIN_APP=meteor_network_server
 DOMAIN_NAME=mns.rs
+
 STATIC_DIR=/srv/http/$MAIN_APP/static
 MEDIA_DIR=/srv/http/$MAIN_APP/media
 
+SSL_KEY_PATH=/etc/ssl/private/nginx-selfsigned.key
+SSL_CERT_PATH=/etc/ssl/certs/nginx-selfsigned.crt
+SSL_DHPARAM_PATH=/etc/ssl/certs/dhparam.pem
+UWSGI_PARAMS_PATH=/etc/nginx/uwsgi_params
 NGINX_SERVERS_DIR=/etc/nginx/sites-enabled
 SOCKET_PATH=/tmp/$MAIN_APP.sock
 NGINX_USER=www-data
@@ -26,6 +31,10 @@ for template in ${templates[@]}; do
             | sed "s~<media_dir>~$MEDIA_DIR~g" \
             | sed "s~<socket_path>~$SOCKET_PATH~g" \
             | sed "s~<nginx_user>~$NGINX_USER~g" \
+            | sed "s~<ssl_key_path>~$SSL_KEY_PATH~g" \
+            | sed "s~<ssl_cert_path>~$SSL_CERT_PATH~g" \
+            | sed "s~<ssl_dhparam_path>~$SSL_DHPARAM_PATH~g" \
+            | sed "s~<uwsgi_params_path>~$UWSGI_PARAMS_PATH~g" \
             )
 
     echo "$content" >$PROJECT_DIR/$MAIN_APP/$config
