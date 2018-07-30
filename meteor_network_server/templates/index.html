@@ -122,10 +122,10 @@
                                 <li>Camera compartment:
                                     <ul>
                                         {% if station.temperature != None %}
-                                        <li>Temperature: {{ station.temperature|floatformat }}°</li>
+                                        <li>Temperature: {{ station.temperature|floatformat:0 }}°</li>
                                         {% endif %}
                                         {% if station.humidity != None %}
-                                        <li>Humidity: {{ station.humidity|floatformat }}%</li>
+                                        <li>Humidity: {{ station.humidity|floatformat:0 }}%</li>
                                         {% endif %}
                                     </ul>
                                 </li>
