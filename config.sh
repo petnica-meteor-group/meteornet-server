@@ -2,7 +2,7 @@
 
 PROJECT_DIR="$( cd "$(dirname "$0")" ; pwd -P )"
 MAIN_APP=meteor_network_server
-DOMAIN_NAME=mns.rs
+DOMAIN_NAME=meteori.petnica.rs
 
 STATIC_DIR=/srv/http/$MAIN_APP/static
 MEDIA_DIR=/srv/http/$MAIN_APP/media
