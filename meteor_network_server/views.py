@@ -94,7 +94,7 @@ def station_register(request):
 
 @csrf_exempt
 @require_http_methods(["POST"])
-def station_update(request):
+def station_info(request):
     if (not STATION_PARAM_ID in request.POST) or (not STATION_PARAM_DATA in request.POST):
         return HttpResponse(RESPONSE_FAILTURE)
 
