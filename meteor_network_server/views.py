@@ -7,18 +7,20 @@ from django.shortcuts import render, redirect
 from django.utils import timezone
 from django.contrib.auth import authenticate, login as django_login, logout as django_logout
 from django.contrib import messages
+from wsgiref.util import FileWrapper
 
 import json
 import math
+from os import path
 
-from .telemetry import stations
+from .stations import stations
 
 STATION_PARAM_ID = "id"
 STATION_PARAM_DATA = "data"
 STATION_PARAM_ERROR = "error"
 
 RESPONSE_SUCCESS = "success"
-RESPONSE_FAILTURE = "failure"
+RESPONSE_FAILURE = "failure"
 
 @require_http_methods(["POST"])
 def login(request):
@@ -94,7 +96,7 @@ def station_register(request):
 
 @csrf_exempt
 @require_http_methods(["POST"])
-def station_update(request):
+def station_info(request):
     if (not STATION_PARAM_ID in request.POST) or (not STATION_PARAM_DATA in request.POST):
         return HttpResponse(RESPONSE_FAILTURE)
 
@@ -119,3 +121,20 @@ def station_error(request):
         return HttpResponse(RESPONSE_SUCCESS)
     else:
         return HttpResponse(RESPONSE_FAILURE)
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def station_version(request):
+    from .stations.station_code.internals import constants
+    return HttpResponse(constants.VERSION)
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def station_update(request):
+    filepath = path.join(path.dirname(__file__), 'stations/station_code.zip')
+    with open(filepath, 'rb') as zipfile:
+        wrapper = FileWrapper(zipfile)
+        response = HttpResponse(wrapper, content_type='application/zip')
+        response['Content-Disposition'] = 'attachment; filename=station_code.zip'
+        response['Content-Length'] = path.getsize(filepath)
+        return response
