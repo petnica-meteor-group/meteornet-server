@@ -3,24 +3,22 @@ from django.core.exceptions import PermissionDenied
 from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
 from django.contrib.auth import authenticate, login as django_login, logout as django_logout
 from django.contrib import messages
 from wsgiref.util import FileWrapper
-
+from datetime import datetime
 import json
 import math
 from os import path
 
+from .stations.models import *
 from .stations import stations
-
-STATION_PARAM_ID = "id"
-STATION_PARAM_DATA = "data"
-STATION_PARAM_ERROR = "error"
 
 RESPONSE_SUCCESS = "success"
 RESPONSE_FAILURE = "failure"
+STATIONS_PER_ROW = 5
 
 @require_http_methods(["POST"])
 def login(request):
@@ -29,18 +27,17 @@ def login(request):
     user = authenticate(request, username=username, password=password)
     if user is not None:
         django_login(request, user)
-        return redirect('/')
     else:
         messages.add_message(request, messages.ERROR, "Wrong credentials")
-        return redirect('/')
+    return redirect('/')
 
 @require_http_methods(["POST"])
 def logout(request):
     django_logout(request)
     return redirect('/')
 
-def format_last_updated(station):
-    minutes = int((timezone.now() - station.last_updated).total_seconds() // 60)
+def format_last_updated(last_updated):
+    minutes = int((timezone.now() - last_updated).total_seconds() // 60)
 
     if minutes < 1:
         return "Less than a minute ago."
@@ -66,58 +63,58 @@ def index(request):
     station_list = stations.get_current_list()
 
     station_rows = []
-    for i in range(0, len(station_list), 2):
+    for i in range(0, len(station_list), STATIONS_PER_ROW):
         row = []
+        for j in range(STATIONS_PER_ROW):
+            if i + j >= len(station_list): break
 
-        station = station_list[i]
-        error_reported = len(stations.get_errors(station.id)) > 0
-        row.append((station, format_last_updated(station), error_reported))
-        if i < len(station_list) - 1:
-            station = station_list[i + 1]
-            error_reported = len(stations.get_errors(station.id)) > 0
-            row.append((station, format_last_updated(station), error_reported))
+            station = station_list[i + j]
+
+            station_card = {}
+            station_card['network_id'] = station.network_id
+            station_card['name'] = station.name
+            station_card['latitude'] = station.latitude
+            station_card['longitude'] = station.longitude
+            station_card['height'] = station.height
+            station_card['last_updated'] = format_last_updated(station.last_updated)
+
+            if len(stations.get_errors(station)) > 0:
+                status_text = "Error(s) occured!"
+                status_color = 'red'
+            elif (timezone.now() - station.last_updated).total_seconds() // 3600 > 12:
+                status_text = "Not connecting"
+                status_color = 'orange'
+            elif (timezone.now() - station.last_updated).total_seconds() // 3600 > 72:
+                status_text = "Disconnected"
+                status_color = 'black'
+            else:
+                status_text = "Good"
+                status_color = 'green'
+
+            station_card['status_text'] = status_text
+            station_card['status_color'] = status_color
+
+            row.append(station_card)
 
         station_rows.append(row)
 
     context = { 'station_rows' : station_rows, 'settings' : settings }
     return render(request, 'index.html', context)
 
+@require_http_methods(["GET"])
+def station_view(request, network_id):
+    context = { 'station' : get_object_or_404(Station, network_id=network_id), 'settings' : settings }
+    return render(request, 'station.html', context)
+
 @csrf_exempt
 @require_http_methods(["POST"])
 def station_register(request):
-    if not STATION_PARAM_DATA in request.POST:
-        return HttpResponse(RESPONSE_FAILURE)
-
-    data = json.loads(request.POST[STATION_PARAM_DATA])
-
-    id = stations.register(data)
-
-    return HttpResponse(id)
+    return HttpResponse(stations.register(request.POST))
 
 @csrf_exempt
 @require_http_methods(["POST"])
-def station_info(request):
-    if (not STATION_PARAM_ID in request.POST) or (not STATION_PARAM_DATA in request.POST):
-        return HttpResponse(RESPONSE_FAILTURE)
-
-    id = request.POST[STATION_PARAM_ID]
-    data = json.loads(request.POST[STATION_PARAM_DATA])
-
-    if stations.update(id, data):
-        return HttpResponse(RESPONSE_SUCCESS)
-    else:
-        return HttpResponse(RESPONSE_FAILURE)
-
-@csrf_exempt
-@require_http_methods(["POST"])
-def station_error(request):
-    if (not STATION_PARAM_ID in request.POST) or (not STATION_PARAM_ERROR in request.POST):
-        return HttpResponse(RESPONSE_FAILURE)
-
-    id = request.POST[STATION_PARAM_ID]
-    error = request.POST[STATION_PARAM_ERROR]
-
-    if stations.error(id, error):
+def station_status(request):
+    if stations.update_status(request.POST):
         return HttpResponse(RESPONSE_SUCCESS)
     else:
         return HttpResponse(RESPONSE_FAILURE)
@@ -125,14 +122,12 @@ def station_error(request):
 @csrf_exempt
 @require_http_methods(["POST"])
 def station_version(request):
-    from .stations.station_code.internals import constants
-    return HttpResponse(constants.VERSION)
+    return HttpResponse(stations.get_version())
 
 @csrf_exempt
 @require_http_methods(["POST"])
 def station_update(request):
-    filepath = path.join(path.dirname(__file__), 'stations/station_code.zip')
-    with open(filepath, 'rb') as zipfile:
+    with open(stations.get_update_filepath(), 'rb') as zipfile:
         wrapper = FileWrapper(zipfile)
         response = HttpResponse(wrapper, content_type='application/zip')
         response['Content-Disposition'] = 'attachment; filename=station_code.zip'

@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>{{ settings.NETWORK_NAME }}</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Boostrap -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.10/css/all.css" integrity="sha384-+d0P83n9kaQMCwj8F4RJB66tzIwOKmrdb46+porD/OvrJ+37WqIM7UoBtwHO6Nlg" crossorigin="anonymous">
+
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+    <!-- End of Bootstrap -->
+
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    <link rel="shortcut icon" type="image/png" href="{% static 'img/logo.png' %}"/>
+
+    {% block header %}
+    {% endblock %}
+
+</head>
+<body>
+
+    <!--
+
+        ~Secret history of Petnica Meteor Network~
+
+        ...also known as The Eye of Savan, is an all seeing eye that watches over
+        the skies of Serbia in search of bright meteors and other celestial phenomena.
+        It is a deity of meteor astronomy, long beards and good wine, worshipped by the
+        cult of Petnica Meteor Group. The upper bound of the estimated time of birth of
+        The Eye is several exayears before the creation of our current multiverse, with
+        speculations that it may have always existed.
+
+        If you wish to embark on a pilgrimage to swear allegiance to our omnipotent deity,
+        please visit the shrine of Debelo Brdo, fill out the notoriously long visual observation
+        paper forms and sacrifice your soul. (And wash some dishes while you are at it.)
+
+    -->
+
+    <nav class="navbar navbar-expand-md navbar-light bg-light">
+        <div class="navbar-collapse collapse w-100 order-1 order-md-0 dual-collapse2">
+            <ul class="navbar-nav mr-auto">
+            </ul>
+        </div>
+        <div class="mx-auto order-0">
+            <a class="navbar-brand mx-auto" href="/">
+                <img height="40" src="{% static 'img/logo.png' %}"/>
+                &nbsp;<span class="title">{{ settings.NETWORK_NAME }}</span>
+            </a>
+        </div>
+        <div class="navbar-collapse collapse w-100 order-3 dual-collapse2">
+            <ul class="navbar-nav ml-auto">
+                {% if user.is_authenticated %}
+                <li class="nav-item">
+                    <form class="form" role="form" method="post" action="logout" accept-charset="UTF-8" id="login-nav">
+                        {% csrf_token %}
+                        <a href="#" class="login-btn" onclick="$(this).closest('form').submit()">Logout</a>
+                    </form>
+                </li>
+                {% else %}
+                <li class="nav-item dropdown">
+                    <a href="#" class="dropdown-toggle login-btn" data-toggle="dropdown">Login</a>
+                    <ul id="login-dp" class="dropdown-menu dropdown-menu-right">
+                        <li>
+                             <div class="row">
+                                <div class="col-md-12">
+                                    <form class="form" role="form" method="post" action="login" accept-charset="UTF-8" id="login-nav">
+                                        {% csrf_token %}
+                                        <div class="form-group">
+                                             <label class="sr-only" for="username">Username</label>
+                                             <input class="form-control" id="username" name="username" placeholder="Username" required/>
+                                        </div>
+                                        <div class="form-group">
+                                             <label class="sr-only" for="password">Password</label>
+                                             <input type="password" class="form-control" id="password" name="password" placeholder="Password" required/>
+                                        </div>
+                                        <div class="form-group">
+                                             <button type="submit" class="btn btn-block">Login</button>
+                                        </div>
+                                    </form>
+                                </div>
+                             </div>
+                        </li>
+        			</ul>
+                </li>
+                {% endif %}
+            </ul>
+        </div>
+    </nav>
+
+    {% if messages %}
+    <ul class="messages" align="center">
+        {% for message in messages %}
+        <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+
+    <div class="container-fluid">
+    {% block content %}
+    {% endblock %}
+    </div>
+
+    <div class="container-fluid">
+        <div class="row footer">
+            <div class="col-12"><a href="http://www.meteori.rs">Petnica Meteor Group</a></div>
+            <div class="col-12">
+                Contact:
+                Vladimir Nikolić (<a href="mailto:vladimir.nik94@gmail.com">vladimir.nik94@gmail.com</a>),
+                Stevan Golubović (<a href="mailto:stevan.golubovic@gmail.com">stevan.golubovic@gmail.com</a>)
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+
+{% block header %}
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/station.css' %}">
+{% endblock %}
+
+{% block content %}
+    {{ station.name }}
+{% endblock %}
