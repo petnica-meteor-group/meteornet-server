@@ -1,46 +1,11 @@
 {% extends 'base.html' %}
 
 {% block header %}
-{% load static %}
-<link rel="stylesheet" href="{% static 'css/index.css' %}">
 {% endblock %}
 
 {% block content %}
-<div class="station-container">
-    {% if user.is_authenticated %}
-        {% for row in station_rows %}
-        <div class="row">
-            <div class="col-1"></div>
-            {% for station_card in row %}
-            <div class="col-2 card-frame">
-                <a href="{% url 'station_view' network_id=station_card.network_id %}">
-                    <div class="card">
-                        <div class="card-header">
-                            <div class="station-name">{{ station_card.name }}</div>
-                            <div class="station-location">
-                            ϕ: {{ station_card.latitude|floatformat:4 }}, λ: {{ station_card.longitude|floatformat:4 }}, <br/>Height: {{ station_card.height|floatformat:2 }}m
-                            </div>
-                        </div>
-                        <div class="card-body">
-                            <div class="status">Status: <span style="color: {{ station_card.status_color }};">{{ station_card.status_text }}</span></div>
-                            <div class="last-updated">Last updated: {{ station_card.last_updated }}</div>
-                        </div>
-                    </div>
-                </a>
-            </div>
-            {% endfor %}
-            <div class="col-1"></div>
-        </div>
-        {% endfor %}
-    {% else %}
-        <p style="color: red; font-size: 20px; border: 2px solid red; width: 200px; margin: auto; text-align: center; padding: 2px;">Under Construction</p>
-        <br/>
-        <p align="center">Login to see station information.</p>
-        <br/>
-        <div align="center">
-            <iframe src="https://www.doogal.co.uk/KmlViewer.php?url=https://www.doogal.co.uk/UploadedKml/4d1e81bb-cf18-4836-8656-d98eef6848b3.kml"
-                width="800" height="600" frameborder="0"></iframe>
-        </div>
-    {% endif %}
+<div align="center">
+    <iframe src="https://www.doogal.co.uk/KmlViewer.php?url=https://www.doogal.co.uk/UploadedKml/4d1e81bb-cf18-4836-8656-d98eef6848b3.kml"
+        width="100%" height="600" frameborder="0"></iframe>
 </div>
 {% endblock %}

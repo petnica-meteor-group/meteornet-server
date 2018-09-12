@@ -1,35 +1,87 @@
 from django.utils import timezone
 from django.core.exceptions import ObjectDoesNotExist
+from django.utils.timezone import make_aware
 from datetime import timedelta, datetime
 from .models import *
 import uuid
 import json
 
-def update_data(station, data):
-    if 'error' in data:
-        error = Error()
+MAX_UNAPPROVED_STATIONS = 50
+
+def register(data):
+    if Station.objects.filter(approved=False).count() >= MAX_UNAPPROVED_STATIONS:
+        return ''
+
+    data = data.get('status', None)
+    if data == None: return ''
+    data = json.loads(data)
+
+    station = Station()
+    for key in data:
+        if key == 'timestamp':
+            station.last_updated = make_aware(datetime.fromtimestamp(int(data['timestamp'])))
+        elif key == 'components' or key == 'maintainers':
+            continue
+        elif hasattr(station, key):
+            try:
+                value = data[key]
+                value = type(getattr(station, key))(value)
+                setattr(station, key, value)
+            except ValueError:
+                pass
+    network_id = uuid.uuid4().hex
+    station.network_id = network_id
+    station.approved = False
+    station.save()
+
+    return network_id
+
+def update_status(data):
+    data = data.get('status', None)
+    if data == None: return False
+    data = json.loads(data)
+
+    try:
         station = Station.objects.get(network_id=data['network_id'])
+        if not station.approved:
+            return True
+    except Exception:
+        return False
+
+    if 'error' in data and 'component' in data:
+        error = Error()
         for component in Component.objects.filter(station=station.id):
             if component.name == data['component']:
                 error.component = component
                 break
         error.message = data['error']
+        if 'timestamp' in data:
+            error.datetime = make_aware(datetime.fromtimestamp(int(data['timestamp'])))
+        else:
+            error.datetime = datetime.now()
         error.save()
     else:
-        if 'timestamp' in data: station.last_updated = datetime.fromtimestamp(int(data['timestamp']))
-        if 'name' in data: station.name = data['name']
-        if 'latitude' in data: station.latitude = float(data['latitude'])
-        if 'longitude' in data: station.longitude = float(data['longitude'])
-        if 'height' in data: station.height = float(data['height'])
-        if 'comment' in data: station.comment = data['comment']
-        station.save()
+        for key in data:
+            if key == 'timestamp':
+                station.last_updated = make_aware(fromtimestamp(int(data['timestamp'])))
+            elif key == 'components' or key == 'maintainers':
+                continue
+            elif hasattr(station, key):
+                try:
+                    value = data[key]
+                    value = type(getattr(station, key))(value)
+                    setattr(station, key, value)
+                except ValueError:
+                    pass
 
         components = Component.objects.filter(station=station.id)
         for component in components:
             component.old = True
 
         if 'components' in data:
-            for component_data in json.loads(data['components']):
+            for component_data in data['components']:
+                if not 'name' in component_data: continue
+
                 target_component = None
                 for component in components:
                     if component.name == component_data['name']:
@@ -41,16 +93,18 @@ def update_data(station, data):
                     target_component.station = station
                     target_component.old = False
                     target_component.save()
-                batch = MeasurementBatch()
-                batch.datetime = datetime.fromtimestamp(int(data['timestamp']))
-                batch.component = target_component
-                batch.save()
-                for key in component_data['measurements']:
-                    measurement = Measurement()
-                    measurement.key = key
-                    measurement.value = component_data['measurements'][key]
-                    measurement.batch = batch
-                    measurement.save()
+
+                if 'timestamp' in data and 'measurements' in component_data:
+                    batch = MeasurementBatch()
+                    batch.datetime = make_aware(datetime.fromtimestamp(int(data['timestamp'])))
+                    batch.component = target_component
+                    batch.save()
+                    for key in component_data['measurements']:
+                        measurement = Measurement()
+                        measurement.key = key
+                        measurement.value = component_data['measurements'][key]
+                        measurement.batch = batch
+                        measurement.save()
 
         for component in components:
             component.save()
@@ -58,13 +112,18 @@ def update_data(station, data):
         old_maintainers = list(station.maintainers.all().values())
         new_maintainers_data = []
         if 'maintainers' in data:
-            for maintainer_data in json.loads(data['maintainers']):
+            for maintainer_data in data['maintainers']:
                 maintainer = None
-                for old_maintainer in old_maintainers:
-                    if old_maintainer['name'] == maintainer_data['name'] and \
-                    old_maintainer['phone'] == maintainer_data['phone'] and \
-                    old_maintainer['email'] == maintainer_data['email']:
-                       maintainer = old_maintainer
+                for existing_maintainer in old_maintainers:
+                    same = True
+                    for key in maintainer_data:
+                        try:
+                            if getattr(existing_maintainer, key, None) != type(getattr(existing_maintainer, key, None))(maintainer_data[key]):
+                                same = False
+                        except ValueError:
+                            same = False
+                    if same:
+                       maintainer = existing_maintainer
                        break
                 if maintainer != None:
                     old_maintainers.remove(maintainer)
@@ -77,42 +136,36 @@ def update_data(station, data):
         for new_maintainer_data in new_maintainers_data:
             found = False
             for person in persons:
-                if person.name == new_maintainer_data['name'] and \
-                person.phone == new_maintainer_data['phone'] and \
-                person.email == new_maintainer_data['email']:
+                same = True
+                for key in new_maintainer_data:
+                    try:
+                        if getattr(person, key, None) != type(getattr(person, key, None))(new_maintainer_data[key]):
+                            same = False
+                    except ValueError:
+                        same = False
+                if same:
                     station.maintainers.add(person)
                     found = True
+                    break
             if not found:
                 maintainer = Person()
-                maintainer.name = new_maintainer_data['name']
-                maintainer.phone = new_maintainer_data['phone']
-                maintainer.email = new_maintainer_data['email']
+                for key in new_maintainer_data:
+                    if hasattr(maintainer, key):
+                        try:
+                            value = new_maintainer_data[key]
+                            value = type(getattr(maintainer, key))(value)
+                            setattr(maintainer, key, value)
+                        except ValueError:
+                            pass
                 maintainer.save()
                 station.maintainers.add(maintainer)
 
         station.save()
 
-def register(data):
-    try:
-        station = Station.objects.get(name=data.get('name', ''))
-        network_id = station.network_id
-    except Station.DoesNotExist:
-        station = Station()
-        network_id = uuid.uuid4().hex
-        station.network_id = network_id
-    update_data(station, data)
-    return network_id
-
-def update_status(data):
-    try:
-        station = Station.objects.get(network_id=data.get('network_id', ''))
-    except Station.DoesNotExist:
-        return False
-    update_data(station, data)
     return True
 
 def get_current_list():
-    return Station.objects.all()
+    return Station.objects.filter(approved=True)
 
 def get_errors(station):
     errors = []
@@ -129,7 +182,7 @@ def get_recent_measurements(station):
     for component_object in Component.objects.filter(station=station.id):
         component_measurements = { 'component' : component_object.name, 'batches' : [] }
         for measurement_batch_object in MeasurementBatch.objects.filter(
-        component=component_object.id, datetime__gt=(timezone.now() - timedelta(days=3))):
+        component=component_object.id, datetime__gt=(timezone.now() - timedelta(days=7))):
             batch = { 'datetime' : measurement_batch_object.datetime, 'measurements' : [] }
             for measurement_object in Measurement.objects.filter(batch=measurement_batch_object.id):
                 batch['measurements'].append({ 'key' : measurement_object.key, 'value' : measurement_object.value })

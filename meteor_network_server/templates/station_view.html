@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block header %}
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/station_view.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="title">{{ station.name }}</div>
+Components:<br/>
+{% for component in components %}
+    {{ component.name }}<br/>
+    values:<br/>
+    {% for value in component.values %}
+        {{ value.0 }} = {{ value.1 }}<br/>
+    {% endfor %}
+    plots:<br/>
+    {% for plot in component.plots %}
+        {{ plot.0 }} = {{ plot.1 }}<br/>
+    {% endfor %}
+{% endfor %}
+Maintainers:<br/>
+{% for maintainer in maintainers %}
+    {{ maintainer.name }}
+{% endfor %}
+{% endblock %}

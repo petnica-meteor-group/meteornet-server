@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block header %}
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/stations_overview.css' %}">
+{% endblock %}
+
+{% block content %}
+    {% for row in station_rows %}
+    <div class="row">
+        {% for station_card in row.station_cards %}
+        <div class="col-{{ row.col_size }}">
+            <a href="{% url 'station_view' network_id=station_card.network_id %}">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="station-name">{{ station_card.name }}</div>
+                        <div class="station-location">
+                        ϕ: {{ station_card.latitude|floatformat:4 }}, λ: {{ station_card.longitude|floatformat:4 }}, <br/>Height: {{ station_card.height|floatformat:2 }}m
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="station-status">Status: <span style="color: {{ station_card.status_color }};">{{ station_card.status_text }}</span></div>
+                        <div class="station-last-updated">Last updated: {{ station_card.last_updated }}</div>
+                    </div>
+                </div>
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+    {% endfor %}
+{% endblock %}

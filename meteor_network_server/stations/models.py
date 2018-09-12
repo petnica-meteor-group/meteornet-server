@@ -15,6 +15,7 @@ class Station(Model):
     comment = TextField(max_length=512, default='')
     maintainers = ManyToManyField(Person)
     last_updated = DateTimeField()
+    approved = BooleanField(default=False)
 
 class Component(Model):
     name = CharField(max_length=64)
@@ -33,3 +34,4 @@ class Measurement(Model):
 class Error(Model):
     message = TextField(max_length=512, default='')
     component = ForeignKey(Component, on_delete=CASCADE)
+    datetime = DateTimeField()

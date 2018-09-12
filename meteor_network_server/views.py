@@ -7,18 +7,21 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
 from django.contrib.auth import authenticate, login as django_login, logout as django_logout
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 from wsgiref.util import FileWrapper
+
 from datetime import datetime
+from os import path
 import json
 import math
-from os import path
+import matplotlib.pyplot as plt
 
 from .stations.models import *
 from .stations import stations
 
 RESPONSE_SUCCESS = "success"
 RESPONSE_FAILURE = "failure"
-STATIONS_PER_ROW = 5
+STATIONS_PER_ROW = 4
 
 @require_http_methods(["POST"])
 def login(request):
@@ -38,7 +41,6 @@ def logout(request):
 
 def format_last_updated(last_updated):
     minutes = int((timezone.now() - last_updated).total_seconds() // 60)
-
     if minutes < 1:
         return "Less than a minute ago."
     elif minutes == 1:
@@ -57,14 +59,23 @@ def format_last_updated(last_updated):
                 return str(days) + " day ago."
             else:
                 return str(days) + " days ago."
+    return ""
 
 @require_http_methods(["GET"])
 def index(request):
+    context = { 'settings' : settings }
+    return render(request, 'index.html', context)
+
+@require_http_methods(["GET"])
+@login_required
+def stations_overview(request):
     station_list = stations.get_current_list()
 
     station_rows = []
     for i in range(0, len(station_list), STATIONS_PER_ROW):
-        row = []
+        row = {}
+
+        station_cards = []
         for j in range(STATIONS_PER_ROW):
             if i + j >= len(station_list): break
 
@@ -94,17 +105,88 @@ def index(request):
             station_card['status_text'] = status_text
             station_card['status_color'] = status_color
 
-            row.append(station_card)
+            station_cards.append(station_card)
+
+        row['station_cards'] = station_cards
+        row['col_size'] = 12 // STATIONS_PER_ROW
 
         station_rows.append(row)
 
     context = { 'station_rows' : station_rows, 'settings' : settings }
-    return render(request, 'index.html', context)
+    return render(request, 'stations_overview.html', context)
 
 @require_http_methods(["GET"])
+@login_required
+def administration(request):
+    context = { 'settings' : settings }
+    return render(request, 'administration.html', context)
+
+@require_http_methods(["GET"])
+@login_required
 def station_view(request, network_id):
-    context = { 'station' : get_object_or_404(Station, network_id=network_id), 'settings' : settings }
-    return render(request, 'station.html', context)
+    station = get_object_or_404(Station, network_id=network_id)
+    measurements = stations.get_recent_measurements(station)
+
+    components = []
+    for component_measurement in measurements:
+        component = {}
+        component['name'] = component_measurement['component']
+        component['plottable'] = {}
+        component['nonplottable'] = {}
+        for batch in component_measurement['batches']:
+            for measurement in batch['measurements']:
+                key = measurement['key']
+                value = measurement['value']
+                if key in component['nonplottable']:
+                    component['nonplottable'][key] = value
+                else:
+                    if key in component['plottable']:
+                        try:
+                            value = float(value)
+                            component['plottable'][key]['x'].append(batch['datetime'])
+                            component['plottable'][key]['y'].append(value)
+
+                            current = component['plottable'][key]['y'][-1]
+                            previous = component['plottable'][key]['y'][-2]
+                            if not (-0.001 < previous < 0.001) and not (0.999 < (current / previous) < 1.001):
+                                component['plottable'][key]['constant'] = False
+                        except ValueError:
+                            del component['plottable'][key]
+                            component['nonplottable'][key] = value
+                    else:
+                        try:
+                            value = float(value)
+                            component['plottable'][key] = {}
+                            component['plottable'][key]['x'] = [ batch['datetime'] ]
+                            component['plottable'][key]['y'] = [ value ]
+                            component['plottable'][key]['constant'] = True
+                        except ValueError:
+                            component['nonplottable'][key] = value
+        components.append(component)
+
+    for component in components:
+        component['values'] = []
+        component['plots'] = []
+
+        for key in component['nonplottable']:
+            component['values'].append((key, component['nonplottable'][key]))
+
+        for key in component['plottable']:
+            if not component['plottable'][key]['constant']:
+                plt.figure()
+                plt.plot(component['plottable'][key]['x'], component['plottable'][key]['y'])
+                path = '/tmp/' + component['name'].replace(' ', '_') + key.replace(' ', '_') + '.png'
+                plt.savefig(path)
+                component['plots'].append((key, path))
+            component['values'].append((key, component['plottable'][key]['y'][-1]))
+
+        del component['plottable']
+        del component['nonplottable']
+
+    maintainers = station.maintainers.all()
+
+    context = { 'station' : station, 'components' : components, 'maintainers' : maintainers, 'settings' : settings }
+    return render(request, 'station_view.html', context)
 
 @csrf_exempt
 @require_http_methods(["POST"])
