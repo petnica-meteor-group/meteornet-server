@@ -1,12 +1,10 @@
 {% extends 'base.html' %}
 
 {% block header %}
-{% load static %}
-<link rel="stylesheet" href="{% static 'css/station_view.css' %}">
 {% endblock %}
 
 {% block content %}
-<div class="title">{{ station.name }}</div>
+<div class="title">Station {{ station.name }}</div>
 Components:<br/>
 {% for component in components %}
     {{ component.name }}<br/>

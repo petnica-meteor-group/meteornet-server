@@ -1,8 +1,44 @@
 {% extends 'base.html' %}
 
 {% block header %}
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/administration.css' %}">
 {% endblock %}
 
 {% block content %}
-Under construction.
+<div class="title">Administration</div>
+{% if registration_requests_rows|length > 0 %}
+<br/>
+<div class="subtitle">Registration requests</div>
+{% for row in registration_requests_rows %}
+<div class="row">
+    {% for station_card in row.station_cards %}
+    <div class="col-{{ row.col_size }}">
+        <div class="card">
+            <div class="card-header">
+                <div class="station-name">{{ station_card.name }}</div>
+                <div class="station-location">
+                ϕ: {{ station_card.latitude|floatformat:4 }}, λ: {{ station_card.longitude|floatformat:4 }}, <br/>Height: {{ station_card.height|floatformat:0 }}m
+                </div>
+            </div>
+            <div class="card-body">
+                <form method="post" action="/station_resolve_registration">
+                    {% csrf_token %}
+                    <input type="hidden" name="network_id" value="{{ station_card.network_id }}" />
+                    <input type="hidden" name="approve" value="True" />
+                    <button type="submit" class="btn btn-block btn-approve">Approve</button>
+                </form>
+                <form method="post" action="/station_resolve_registration">
+                    {% csrf_token %}
+                    <input type="hidden" name="network_id" value="{{ station_card.network_id }}" />
+                    <input type="hidden" name="approve" value="False" />
+                    <button type="submit" class="btn btn-block btn-disapprove">Disapprove</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endfor %}
+{% endif %}
 {% endblock %}

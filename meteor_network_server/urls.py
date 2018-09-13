@@ -27,6 +27,7 @@ urlpatterns = [
     path('administration', views.administration, name='administration'),
     path('station_view/<network_id>', views.station_view, name='station_view'),
     path('station_register', views.station_register, name='station_register'),
+    path('station_resolve_registration', views.station_resolve_registration, name='station_resolve_registration'),
     path('station_status', views.station_status, name='station_status'),
     path('station_version', views.station_version, name='station_version'),
     path('station_update', views.station_update, name='station_update'),

@@ -33,3 +33,19 @@
 .station-last-updated {
     font-size: 12px;
 }
+
+.btn-approve {
+    background-color: #00CC00;
+    color: white;
+    font-size: 14px;
+    width: 70%;
+    margin: 0 auto 8px auto;
+}
+
+.btn-disapprove {
+    background-color: red;
+    color: white;
+    font-size: 14px;
+    width: 70%;
+    margin: auto;
+}

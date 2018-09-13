@@ -92,7 +92,7 @@ def stations_overview(request):
             if len(stations.get_errors(station)) > 0:
                 status_text = "Error(s) occured!"
                 status_color = 'red'
-            elif (timezone.now() - station.last_updated).total_seconds() // 3600 > 12:
+            elif (timezone.now() - station.last_updated).total_seconds() // 3600 > 6:
                 status_text = "Not connecting"
                 status_color = 'orange'
             elif (timezone.now() - station.last_updated).total_seconds() // 3600 > 72:
@@ -100,7 +100,7 @@ def stations_overview(request):
                 status_color = 'black'
             else:
                 status_text = "Good"
-                status_color = 'green'
+                status_color = '#00CC00'
 
             station_card['status_text'] = status_text
             station_card['status_color'] = status_color
@@ -118,7 +118,33 @@ def stations_overview(request):
 @require_http_methods(["GET"])
 @login_required
 def administration(request):
-    context = { 'settings' : settings }
+    unapproved_stations = stations.get_unapproved()
+
+    registration_requests_rows = []
+    for i in range(0, len(unapproved_stations), STATIONS_PER_ROW):
+        row = {}
+
+        station_cards = []
+        for j in range(STATIONS_PER_ROW):
+            if i + j >= len(unapproved_stations): break
+
+            station = unapproved_stations[i + j]
+
+            station_card = {}
+            station_card['network_id'] = station.network_id
+            station_card['name'] = station.name
+            station_card['latitude'] = station.latitude
+            station_card['longitude'] = station.longitude
+            station_card['height'] = station.height
+
+            station_cards.append(station_card)
+
+        row['station_cards'] = station_cards
+        row['col_size'] = 12 // STATIONS_PER_ROW
+
+        registration_requests_rows.append(row)
+
+    context = { 'registration_requests_rows' : registration_requests_rows, 'settings' : settings }
     return render(request, 'administration.html', context)
 
 @require_http_methods(["GET"])
@@ -192,6 +218,11 @@ def station_view(request, network_id):
 @require_http_methods(["POST"])
 def station_register(request):
     return HttpResponse(stations.register(request.POST))
+
+@require_http_methods(["POST"])
+def station_resolve_registration(request):
+    stations.resolve_registration(request.POST.get('network_id', ''), request.POST.get('approve', None) == 'True')
+    return redirect('/administration')
 
 @csrf_exempt
 @require_http_methods(["POST"])
