@@ -3,7 +3,7 @@
     border: 1px solid rgba(255, 255, 255, 0.5);
     border-radius: 5px;
     background-color: rgba(100, 100, 120, 0.5);
-    height: 180px;
+    height: 200px;
 }
 
 .card-header {
@@ -35,17 +35,33 @@
 }
 
 .btn-approve {
-    background-color: #00CC00;
-    color: white;
     font-size: 14px;
     width: 70%;
     margin: 0 auto 8px auto;
 }
 
+.btn-approve:hover {
+    background-color: #00BB00;
+}
+
 .btn-disapprove {
-    background-color: red;
-    color: white;
     font-size: 14px;
     width: 70%;
+    margin: auto;
+}
+
+.btn-disapprove:hover {
+    background-color: red;
+}
+
+.notes, .notes:focus {
+    width: 90%;
+    min-height: 300px;
+    margin: auto;
+    background-color: rgba(255, 255, 255, 0.8);
+}
+
+.btn-notes-update {
+    width: 100px;
     margin: auto;
 }

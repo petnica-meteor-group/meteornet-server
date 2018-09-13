@@ -1,0 +1,60 @@
+.btn-delete {
+    margin: auto;
+    width: 100px;
+    background-color: red;
+}
+
+.btn-delete:hover {
+    margin: auto;
+    width: 100px;
+    background-color: red;
+}
+
+.modal {
+    position: fixed;
+    top: 15%;
+    margin: auto;
+    width: 400px;
+}
+
+.modal-header {
+    color: black;
+    text-align: center;
+    margin: auto;
+}
+
+.modal-body {
+    color: black;
+    text-align: center;
+    margin: auto;
+}
+
+.modal-footer {
+    text-align: center;
+    margin: auto;
+}
+
+.btn-delete {
+    width: 100px;
+}
+
+.btn-no {
+    width: 100px;
+}
+
+.btn-resolve {
+    width: 100px;
+    margin: auto;
+}
+
+.error-title {
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    border-radius: 5px;
+    padding: 5px;
+}
+
+.error-message {
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    border-radius: 5px;
+    padding: 5px;
+}

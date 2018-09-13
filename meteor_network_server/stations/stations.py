@@ -20,9 +20,7 @@ def register(data):
 
     station = Station()
     for key in data:
-        if key == 'timestamp':
-            station.last_updated = make_aware(datetime.fromtimestamp(int(data['timestamp'])))
-        elif key == 'components' or key == 'maintainers':
+        if type(data[key]) is list or type(data[key]) is dict:
             continue
         elif hasattr(station, key):
             try:
@@ -31,6 +29,7 @@ def register(data):
                 setattr(station, key, value)
             except ValueError:
                 pass
+    if 'timestamp' in data: station.last_updated = make_aware(datetime.fromtimestamp(int(data['timestamp'])))
     network_id = uuid.uuid4().hex
     station.network_id = network_id
     station.approved = False
@@ -68,9 +67,7 @@ def update_status(data):
     else:
         with transaction.atomic():
             for key in data:
-                if key == 'timestamp':
-                    station.last_updated = make_aware(datetime.fromtimestamp(int(data['timestamp'])))
-                elif key == 'components' or key == 'maintainers':
+                if type(data[key]) is list or type(data[key]) is dict:
                     continue
                 elif hasattr(station, key):
                     try:
@@ -79,6 +76,7 @@ def update_status(data):
                         setattr(station, key, value)
                     except ValueError:
                         pass
+            if 'timestamp' in data: station.last_updated = make_aware(datetime.fromtimestamp(int(data['timestamp'])))
 
             components = Component.objects.filter(station=station.id)
             for component in components:
@@ -189,7 +187,7 @@ def update_status(data):
 
     return True
 
-def resolve_registration(network_id, approve):
+def registration_resolve(network_id, approve):
     try:
         station = Station.objects.get(network_id=network_id)
         if approve:
@@ -197,6 +195,15 @@ def resolve_registration(network_id, approve):
             station.save()
         else:
             station.delete()
+        return True
+    except Station.DoesNotExit:
+        pass
+    return False
+
+def delete(network_id):
+    try:
+        station = Station.objects.get(network_id=network_id)
+        station.delete()
         return True
     except Station.DoesNotExit:
         pass
@@ -212,8 +219,16 @@ def get_errors(station):
     errors = []
     for component_object in Component.objects.filter(station=station.id):
         for error_object in Error.objects.filter(component=component_object.id):
-            errors.append({ 'component' : component_object.name, 'message' : error_object.message })
+            errors.append({
+                'id' : error_object.id,
+                'component' : component_object.name,
+                'message' : error_object.message,
+                'datetime' : error_object.datetime
+            })
     return errors
+
+def error_resolve(id):
+    Error.objects.get(id=id).delete()
 
 def get_maintainers(station):
     return station.maintainers.all()

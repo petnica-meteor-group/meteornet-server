@@ -22,13 +22,13 @@
                 </div>
             </div>
             <div class="card-body">
-                <form method="post" action="/station_resolve_registration">
+                <form method="post" action="/station_registration_resolve">
                     {% csrf_token %}
                     <input type="hidden" name="network_id" value="{{ station_card.network_id }}" />
                     <input type="hidden" name="approve" value="True" />
                     <button type="submit" class="btn btn-block btn-approve">Approve</button>
                 </form>
-                <form method="post" action="/station_resolve_registration">
+                <form method="post" action="/station_registration_resolve">
                     {% csrf_token %}
                     <input type="hidden" name="network_id" value="{{ station_card.network_id }}" />
                     <input type="hidden" name="approve" value="False" />
@@ -41,4 +41,14 @@
 </div>
 {% endfor %}
 {% endif %}
+<div class="subtitle">Notes</div>
+<form method="post" action="/administration_notes_update">
+    {% csrf_token %}
+    <div class="form-group">
+        <textarea class="form-control notes" name="notes">{{ notes }}</textarea>
+    </div>
+    <div class="form-group">
+        <button type="submit" class="btn btn-block btn-notes-update">Update</button>
+    </div>
+</form>
 {% endblock %}

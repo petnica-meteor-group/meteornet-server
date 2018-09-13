@@ -1,4 +1,4 @@
-from django.http import Http404, HttpResponse
+from django.http import Http404, HttpResponse, HttpResponseRedirect
 from django.core.exceptions import PermissionDenied
 from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
@@ -16,6 +16,7 @@ import json
 import math
 import matplotlib.pyplot as plt
 
+from .models import *
 from .stations.models import *
 from .stations import stations
 
@@ -144,14 +145,29 @@ def administration(request):
 
         registration_requests_rows.append(row)
 
-    context = { 'registration_requests_rows' : registration_requests_rows, 'settings' : settings }
+    if AdministrationNotes.objects.all().count() == 0:
+        notes = AdministrationNotes()
+        notes.content = ''
+        notes.save()
+    else:
+        notes = AdministrationNotes.objects.all().first()
+
+    context = { 'registration_requests_rows' : registration_requests_rows, 'notes' : notes.content, 'settings' : settings }
     return render(request, 'administration.html', context)
+
+@require_http_methods(["POST"])
+def administration_notes_update(request):
+    notes = AdministrationNotes.objects.all().first()
+    notes.content = request.POST.get('notes', '')
+    notes.save()
+    return redirect('/administration')
 
 @require_http_methods(["GET"])
 @login_required
 def station_view(request, network_id):
     station = get_object_or_404(Station, network_id=network_id)
     measurements = stations.get_recent_measurements(station)
+    errors = stations.get_errors(station)
 
     components = []
     for component_measurement in measurements:
@@ -211,7 +227,13 @@ def station_view(request, network_id):
 
     maintainers = station.maintainers.all()
 
-    context = { 'station' : station, 'components' : components, 'maintainers' : maintainers, 'settings' : settings }
+    context = {
+        'station' : station,
+        'components' : components,
+        'maintainers' : maintainers,
+        'errors' : errors,
+        'settings' : settings
+    }
     return render(request, 'station_view.html', context)
 
 @csrf_exempt
@@ -220,8 +242,9 @@ def station_register(request):
     return HttpResponse(stations.register(request.POST))
 
 @require_http_methods(["POST"])
-def station_resolve_registration(request):
-    stations.resolve_registration(request.POST.get('network_id', ''), request.POST.get('approve', None) == 'True')
+@login_required
+def station_registration_resolve(request):
+    stations.registration_resolve(request.POST.get('network_id', ''), request.POST.get('approve', None) == 'True')
     return redirect('/administration')
 
 @csrf_exempt
@@ -246,3 +269,17 @@ def station_update(request):
         response['Content-Disposition'] = 'attachment; filename=station_code.zip'
         response['Content-Length'] = path.getsize(filepath)
         return response
+
+@require_http_methods(["POST"])
+@login_required
+def station_error_resolve(request):
+    stations.error_resolve(request.POST.get('error_id', ''))
+    return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
+@require_http_methods(["POST"])
+@login_required
+def station_delete(request):
+    if stations.delete(request.POST.get('network_id', '')):
+        return redirect('/stations_overview')
+    else:
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
