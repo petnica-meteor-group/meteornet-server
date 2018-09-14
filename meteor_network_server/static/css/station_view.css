@@ -47,9 +47,21 @@
     margin: auto;
 }
 
+.btn-show-plots {
+    width: 120px;
+    margin: auto;
+}
+
+.coordinates {
+    font-size: 14px;
+    text-align: center;
+    width: 100%;
+}
+
 .comment {
     width: 100%;
     text-align: center;
+    font-size: 16px;
 }
 
 .error-title {

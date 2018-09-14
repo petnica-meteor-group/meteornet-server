@@ -7,9 +7,14 @@
 
 {% block content %}
 {% load nbsp %}
-<div class="title">Station {{ station.name }}</div>
+<div class="title">
+    Station {{ station.name }}<br/>
+    <div class="coordinates">
+        ϕ: {{ station.latitude|floatformat:4 }}, λ: {{ station.longitude|floatformat:4 }}, Height: {{ station.height|floatformat:2 }}m
+    </div>
+</div>
 <div class="comment">{{ station.comment }}</div>
-<br/>
+<hr/>
 {% if errors|length > 0 %}
 <div class="subtitle">Errors</div>
 <dl>
@@ -67,18 +72,22 @@
                 </div>
                 {% endfor %}
                 <br/>
-                {% for row in component.plot_rows %}
-                <div class="row">
-                    <div class="col-{{ row.sidecol_size }}"></div>
-                    {% for plot in row.plots %}
-                    <div class="col-{{ row.col_size }}">
-                        <img class="plot" src="/station_graph/{{ plot }}"></img>
-                    </div>
-                    {% endfor %}
-                    <div class="col-{{ row.sidecol_size }}"></div>
-                </div>
+                <button class="btn btn-block btn-show-plots" data-toggle="collapse" data-target="#show-plots-{{ component.name }}">Show Plots</button>
                 <br/>
-                {% endfor %}
+                <div id="show-plots-{{ component.name }}" class="collapse">
+                    {% for row in component.plot_rows %}
+                    <div class="row">
+                        <div class="col-{{ row.sidecol_size }}"></div>
+                        {% for plot in row.plots %}
+                        <div class="col-{{ row.col_size }}">
+                            <img class="plot" src="/station_graph/{{ plot }}"></img>
+                        </div>
+                        {% endfor %}
+                        <div class="col-{{ row.sidecol_size }}"></div>
+                    </div>
+                    <br/>
+                    {% endfor %}
+                </div>
             </div>
         </div>
     </div>
