@@ -33,7 +33,7 @@ if os.environ.get('DJANGO_DEBUG'):
     ALLOWED_HOSTS = [ '*' ]
 else:
     DEBUG = False
-    ALLOWED_HOSTS = [ '<domain_name>', 'www.<domain_name>' ]
+    ALLOWED_HOSTS = [ '<domain_name>', 'www.<domain_name>', '10.51.0.54' ]
 
 # Application definition
 

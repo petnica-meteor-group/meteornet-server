@@ -14,6 +14,8 @@ from datetime import datetime, timedelta
 from os import path
 import json
 import math
+import matplotlib
+matplotlib.use('WebAgg')
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mticker
 import PIL
