@@ -38,8 +38,9 @@
     width: 100px;
 }
 
-.btn-no {
+.btn-no, .btn-no:hover {
     width: 100px;
+    background-color: rgba(150, 150, 150, 1);
 }
 
 .btn-resolve {
