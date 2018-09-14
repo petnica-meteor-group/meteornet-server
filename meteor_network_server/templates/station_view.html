@@ -24,25 +24,60 @@
 {% endfor %}
 </dl>
 {% endif %}
+<div class="subtitle">Maintainers</div>
+{% for row in maintainer_rows %}
+<div class="row">
+    <div class="col-{{ row.sidecol_size }}"></div>
+    {% for maintainer_card in row.maintainer_cards %}
+    <div class="col-{{ row.col_size }}">
+        <div class="card card-maintainer">
+            <div class="card-body">
+                <div>Name: {{ maintainer_card.name }}</div>
+                <div>Phone: {{ maintainer_card.phone }}</div>
+                <div>Email: {{ maintainer_card.email }}</div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+    <div class="col-{{ row.sidecol_size }}"></div>
+</div>
+{% endfor %}
+<br/>
 <div class="subtitle">Components</div>
 {% for component in components %}
-    {{ component.name }}<br/>
-    values:<br/>
-    {% for value in component.values %}
-        {{ value.0 }} = {{ value.1 }}<br/>
-    {% endfor %}
-    plots:<br/>
-    {% for plot in component.plots %}
-        {{ plot.0 }} = {{ plot.1 }}<br/>
-    {% endfor %}
+<div class="row">
+    <div class="col-12">
+        <div class="card card-component">
+            <div class="card-header">
+                <div class="component-name">{{ component.name }}</div>
+            </div>
+            <div class="card-body">
+                {% for row in component.current_values_rows %}
+                <div class="row">
+                    <div class="col-12">
+                        <div class="current-values">
+                            {{ row }}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+                <br/>
+                {% for row in component.plot_rows %}
+                <div class="row">
+                    <div class="col-{{ row.sidecol_size }}"></div>
+                    {% for plot in row.plots %}
+                    <div class="col-{{ row.col_size }}">
+                        <img class="plot" src="/station_graph/{{ plot }}"></img>
+                    </div>
+                    {% endfor %}
+                    <div class="col-{{ row.sidecol_size }}"></div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
 {% endfor %}
-<div class="subtitle">Maintainers</div>
-{% for maintainer in maintainers %}
-    {{ maintainer.name }}
-{% endfor %}
-<div class="subtitle">Graphs</div>
-/
-
 <button type="button" class="btn btn-block btn-delete" data-toggle="modal" data-target="#modal-delete">Delete</button>
 <div id="modal-delete" class="modal fade" role="dialog">
     <div class="modal-dialog">

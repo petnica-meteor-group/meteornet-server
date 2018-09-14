@@ -34,4 +34,5 @@ urlpatterns = [
     path('station_update', views.station_update, name='station_update'),
     path('station_error_resolve', views.station_error_resolve, name='station_error_resolve'),
     path('station_delete', views.station_delete, name='station_delete'),
+    path('station_graph/<graph>', views.station_graph, name='station_graph'),
 ]

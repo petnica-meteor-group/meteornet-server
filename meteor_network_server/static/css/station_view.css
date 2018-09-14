@@ -58,3 +58,25 @@
     border-radius: 5px;
     padding: 5px;
 }
+
+.card-maintainer {
+    height: 100px;
+}
+
+.card-component {
+    margin-bottom: 16px;
+    min-height: 150px;
+}
+
+.component-name {
+    margin-bottom: 8px;
+}
+
+.current-values {
+    margin: auto;
+}
+
+.plot {
+    width: 90%;
+    margin: 16px;
+}

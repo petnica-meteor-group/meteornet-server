@@ -15,6 +15,8 @@ from os import path
 import json
 import math
 import matplotlib.pyplot as plt
+import PIL
+import random
 
 from .models import *
 from .stations.models import *
@@ -23,6 +25,10 @@ from .stations import stations
 RESPONSE_SUCCESS = "success"
 RESPONSE_FAILURE = "failure"
 STATIONS_PER_ROW = 4
+MAINTAINERS_PER_ROW = 3
+COMPONENT_CURRENT_VALUES_PER_ROW = 4
+RECENT_BATCH_WINDOW_HOURS = 3
+COMPONENT_PLOTS_PER_ROW = 2
 
 @require_http_methods(["POST"])
 def login(request):
@@ -169,68 +175,148 @@ def station_view(request, network_id):
     measurements = stations.get_recent_measurements(station)
     errors = stations.get_errors(station)
 
+    maintainers = list(station.maintainers.all().values())
+    maintainer_rows = []
+    for i in range(0, len(maintainers), MAINTAINERS_PER_ROW):
+        row = {}
+
+        maintainer_cards = []
+        for j in range(MAINTAINERS_PER_ROW):
+            if i + j >= len(maintainers): break
+
+            maintainer = maintainers[i + j]
+
+            maintainer_card = {}
+            maintainer_card['name'] = maintainer['name']
+            maintainer_card['phone'] = maintainer['phone']
+            maintainer_card['email'] = maintainer['email']
+
+            maintainer_cards.append(maintainer_card)
+
+        row['maintainer_cards'] = maintainer_cards
+        row['col_size'] = 12 // MAINTAINERS_PER_ROW
+        row['sidecol_size'] = (12 - len(maintainer_cards) * row['col_size']) // 2
+
+        maintainer_rows.append(row)
+
     components = []
     for component_measurement in measurements:
         component = {}
         component['name'] = component_measurement['component']
-        component['plottable'] = {}
-        component['nonplottable'] = {}
+
+        timedeltas = []
+        for i in range(1, len(component_measurement['batches'])):
+            timedeltas.append(component_measurement['batches'][i    ]['datetime'] -
+                              component_measurement['batches'][i - 1]['datetime'])
+        timedeltas = sorted(timedeltas)
+        median_timedelta = timedeltas[len(timedeltas) // 2]
+        current_datetime = timezone.now()
+
+        def extract_num_unit(string_value):
+            num = float('NaN')
+            cutout = len(string_value)
+            for i in range(1, len(string_value) + 1):
+                try:
+                    num = float(string_value[:i])
+                except ValueError:
+                    cutout = i - 1
+                    break
+            return num, string_value[cutout:]
+
+        current_values_data = {}
+        plot_data = {}
         for batch in component_measurement['batches']:
-            for measurement in batch['measurements']:
-                key = measurement['key']
-                value = measurement['value']
-                if key in component['nonplottable']:
-                    component['nonplottable'][key] = value
+            recent_batch = (current_datetime - batch['datetime']).total_seconds() // 3600 < RECENT_BATCH_WINDOW_HOURS
+
+            for key in batch['measurements']:
+                value = batch['measurements'][key]
+                if recent_batch:
+                    current_values_data[key] = value
+
+                if key in plot_data:
+                    data = plot_data[key]
+                    previous_datetime = data['values'][-1]['x'][-1]
+                    current_datetime = batch['datetime']
+                    if (current_datetime - previous_datetime) > 2.5 * median_timedelta:
+                        data['values'].append([])
                 else:
-                    if key in component['plottable']:
-                        try:
-                            value = float(value)
-                            component['plottable'][key]['x'].append(batch['datetime'])
-                            component['plottable'][key]['y'].append(value)
+                    data = { 'values' : [ { 'x' : [], 'y' : [] } ] }
 
-                            current = component['plottable'][key]['y'][-1]
-                            previous = component['plottable'][key]['y'][-2]
-                            if not (-0.001 < previous < 0.001) and not (0.999 < (current / previous) < 1.001):
-                                component['plottable'][key]['constant'] = False
-                        except ValueError:
-                            del component['plottable'][key]
-                            component['nonplottable'][key] = value
+                data['values'][-1]['x'].append(batch['datetime'])
+                if 'classes' in data:
+                    if not (value in data['classes']):
+                        data['class_ids'].append(data['class_ids'][-1] + 1)
+                        data['classes'].append(value)
+                    data['values'][-1]['y'].append(data['class_ids'][data['classes'].index(value)])
+                else:
+                    if len(data['values'][-1]['y']) > 0:
+                        _, previous_unit = extract_num_unit(data['values'][-1]['y'][-1])
                     else:
-                        try:
-                            value = float(value)
-                            component['plottable'][key] = {}
-                            component['plottable'][key]['x'] = [ batch['datetime'] ]
-                            component['plottable'][key]['y'] = [ value ]
-                            component['plottable'][key]['constant'] = True
-                        except ValueError:
-                            component['nonplottable'][key] = value
+                        previous_unit = None
+                    num, unit = extract_num_unit(value)
+                    if (previous_unit != None and unit != previous_unit) or math.isnan(num):
+                        data['class_ids'] = []
+                        data['classes'] = []
+                        for i in len(data['values'][-1]['y']):
+                            y = data['values'][-1]['y'][i]
+                            if not (y in data['classes']):
+                                new_id = data['class_ids'][-1] + 1 if len(data['class_ids']) > 0 else 1
+                                data['class_ids'].append(new_id)
+                                data['classes'].append(y)
+                            data['values'][-1]['y'][i] = data['class_ids'][data['classes'].index(value)]
+                        data['class_ids'].append(data['class_ids'][-1] + 1)
+                        data['classes'].append(value)
+                        del data['unit']
+                    else:
+                        data['values'][-1]['y'].append(num)
+                        data['unit'] = unit
+
+        current_values = []
+        for key in current_values_data:
+            current_values.append(key, current_values_data[key])
+
+        plots = []
+        for key in plot_data:
+            plot = station.network_id + component['name'] + key
+            data = plot_data[key]
+            color = [ random.randint(0, 255), random.randint(0, 255), random.randint(0, 255) ]
+            plt.figure()
+            if 'classes' in data: plt.yticks(data['class_ids'], data['classes'])
+            for xy in data['values']:
+                plt.plot(xy['x'], xy['y'], color=color)
+            plt.savefig(path.join('/tmp', plot))
+            plots.append(plot)
+
+        component['current_values_rows'] = []
+        for i in range(0, len(current_values), COMPONENT_CURRENT_VALUES_PER_ROW):
+            row = ''
+            for j in range(COMPONENT_CURRENT_VALUES_PER_ROW):
+                if i + j >= len(current_values): break
+                key, value = current_values[i + j]
+                row += key + " = " + str(value) + ", "
+            row = row[:-len(", ")]
+            component['current_values_rows'].append(row)
+
+        component['plot_rows'] = []
+        for i in range(0, len(plots), COMPONENT_PLOTS_PER_ROW):
+            row = {}
+            plots = []
+            for j in range(COMPONENT_PLOTS_PER_ROW):
+                if i + j >= len(plots): break
+                plots.append(plots[i + j])
+
+            row['plots'] = plots
+            row['col_size'] = 12 // COMPONENT_PLOTS_PER_ROW
+            row['sidecol_size'] = (12 - len(plots) * row['col_size']) // 2
+
+            component['plot_rows'].append(row)
+
         components.append(component)
-
-    for component in components:
-        component['values'] = []
-        component['plots'] = []
-
-        for key in component['nonplottable']:
-            component['values'].append((key, component['nonplottable'][key]))
-
-        for key in component['plottable']:
-            if not component['plottable'][key]['constant']:
-                plt.figure()
-                plt.plot(component['plottable'][key]['x'], component['plottable'][key]['y'])
-                path = '/tmp/' + component['name'].replace(' ', '_') + key.replace(' ', '_') + '.png'
-                plt.savefig(path)
-                component['plots'].append((key, path))
-            component['values'].append((key, component['plottable'][key]['y'][-1]))
-
-        del component['plottable']
-        del component['nonplottable']
-
-    maintainers = station.maintainers.all()
 
     context = {
         'station' : station,
+        'maintainer_rows' : maintainer_rows,
         'components' : components,
-        'maintainers' : maintainers,
         'errors' : errors,
         'settings' : settings
     }
@@ -283,3 +369,11 @@ def station_delete(request):
         return redirect('/stations_overview')
     else:
         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
+@require_http_methods(["GET"])
+@login_required
+def station_graph(request, graph):
+    response = HttpResponse(content_type='image/png')
+    graph = PIL.Image.open(path.join('/tmp', graph))
+    graph.save(response, 'PNG')
+    return response
