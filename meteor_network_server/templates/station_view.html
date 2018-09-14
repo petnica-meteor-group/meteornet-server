@@ -8,6 +8,8 @@
 {% block content %}
 {% load nbsp %}
 <div class="title">Station {{ station.name }}</div>
+<div class="comment">{{ station.comment }}</div>
+<br/>
 {% if errors|length > 0 %}
 <div class="subtitle">Errors</div>
 <dl>
@@ -24,6 +26,7 @@
 {% endfor %}
 </dl>
 {% endif %}
+{% if maintainer_rows|length > 0 %}
 <div class="subtitle">Maintainers</div>
 {% for row in maintainer_rows %}
 <div class="row">
@@ -43,6 +46,8 @@
 </div>
 {% endfor %}
 <br/>
+{% endif %}
+{% if components|length > 0 %}
 <div class="subtitle">Components</div>
 {% for component in components %}
 <div class="row">
@@ -79,6 +84,7 @@
     </div>
 </div>
 {% endfor %}
+{% endif %}
 <button type="button" class="btn btn-block btn-delete" data-toggle="modal" data-target="#modal-delete">Delete</button>
 <div id="modal-delete" class="modal fade" role="dialog">
     <div class="modal-dialog">
