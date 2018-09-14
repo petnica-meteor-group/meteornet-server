@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 import os
 import sys
+import matplotlib
+matplotlib.use('WebAgg')
 
 if __name__ == "__main__":
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "meteor_network_server.settings")

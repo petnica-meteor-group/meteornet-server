@@ -84,7 +84,7 @@ WSGI_APPLICATION = '<main_app>.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'pmndb',
+        'NAME': 'mndb',
         'USER': 'postgres',
         'PASSWORD': open(path.join(path.dirname(path.abspath(__file__)), 'db_password')).read().splitlines()[0],
         'HOST': '127.0.0.1',
@@ -134,6 +134,8 @@ STATIC_URL = '/static/'
 STATIC_ROOT = '<static_dir>'
 
 # Misc
+LOGIN_URL = '/'
+
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = 'DENY'

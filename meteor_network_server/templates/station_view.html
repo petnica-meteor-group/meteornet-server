@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+
+{% block header %}
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/station_view.css' %}">
+{% endblock %}
+
+{% block content %}
+{% load nbsp %}
+<div class="title">Station {{ station.name }}</div>
+{% if errors|length > 0 %}
+<div class="subtitle">Errors</div>
+<dl>
+{% for error in errors %}
+    <dt class="error-title">{{ error.component }} / {{ error.datetime }}</dt>
+    <dd class="error-message">
+        {{ error.message|linebreaks|nbsp }}
+        <form method="post" action="/station_error_resolve">
+            {% csrf_token %}
+            <input type="hidden" name="error_id" value="{{ error.id }}" />
+            <button type="submit" class="btn btn-block btn-resolve">Resolve</button>
+        </form>
+    </dd>
+{% endfor %}
+</dl>
+{% endif %}
+<div class="subtitle">Maintainers</div>
+{% for row in maintainer_rows %}
+<div class="row">
+    <div class="col-{{ row.sidecol_size }}"></div>
+    {% for maintainer_card in row.maintainer_cards %}
+    <div class="col-{{ row.col_size }}">
+        <div class="card card-maintainer">
+            <div class="card-body">
+                <div>Name: {{ maintainer_card.name }}</div>
+                <div>Phone: {{ maintainer_card.phone }}</div>
+                <div>Email: {{ maintainer_card.email }}</div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+    <div class="col-{{ row.sidecol_size }}"></div>
+</div>
+{% endfor %}
+<br/>
+<div class="subtitle">Components</div>
+{% for component in components %}
+<div class="row">
+    <div class="col-12">
+        <div class="card card-component">
+            <div class="card-header">
+                <div class="component-name">{{ component.name }}</div>
+            </div>
+            <div class="card-body">
+                {% for row in component.current_values_rows %}
+                <div class="row">
+                    <div class="col-12">
+                        <div class="current-values">
+                            {{ row }}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+                <br/>
+                {% for row in component.plot_rows %}
+                <div class="row">
+                    <div class="col-{{ row.sidecol_size }}"></div>
+                    {% for plot in row.plots %}
+                    <div class="col-{{ row.col_size }}">
+                        <img class="plot" src="/station_graph/{{ plot }}"></img>
+                    </div>
+                    {% endfor %}
+                    <div class="col-{{ row.sidecol_size }}"></div>
+                </div>
+                <br/>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+<button type="button" class="btn btn-block btn-delete" data-toggle="modal" data-target="#modal-delete">Delete</button>
+<div id="modal-delete" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">Delete Station?</h4>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete {{ station.name }}?</p>
+            </div>
+            <div class="modal-footer">
+                <form method="post" action="/station_delete">
+                    {% csrf_token %}
+                    <input type="hidden" name="network_id" value="{{ station.network_id }}" />
+                    <button type="submit" class="btn btn-block btn-delete">Yes</button>
+                </form>
+                <button type="button" class="btn btn-default btn-no" data-dismiss="modal">No</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

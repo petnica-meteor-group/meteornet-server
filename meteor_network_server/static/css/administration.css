@@ -1,0 +1,54 @@
+.card {
+    height: 200px;
+}
+
+.station-name {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.station-location {
+    font-size: 12px;
+    margin-bottom: 10px;
+}
+
+.station-status {
+    font-size: 16px;
+    margin-bottom: 10px;
+}
+
+.station-last-updated {
+    font-size: 12px;
+}
+
+.btn-approve {
+    font-size: 14px;
+    width: 70%;
+    margin: 0 auto 8px auto;
+}
+
+.btn-approve:hover {
+    background-color: #00BB00;
+}
+
+.btn-disapprove {
+    font-size: 14px;
+    width: 70%;
+    margin: auto;
+}
+
+.btn-disapprove:hover {
+    background-color: red;
+}
+
+.notes, .notes:focus {
+    width: 90%;
+    min-height: 300px;
+    margin: auto;
+    background-color: rgba(255, 255, 255, 1);
+}
+
+.btn-notes-update {
+    width: 100px;
+    margin: auto;
+}

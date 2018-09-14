@@ -1,0 +1,22 @@
+.card {
+    height: 200px;
+}
+
+.station-name {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.station-location {
+    font-size: 12px;
+    margin-bottom: 10px;
+}
+
+.station-status {
+    font-size: 16px;
+    margin-bottom: 10px;
+}
+
+.station-last-updated {
+    font-size: 12px;
+}

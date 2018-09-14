@@ -20,12 +20,19 @@ from . import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', views.index, name='index'),
     path('login', views.login, name='login'),
     path('logout', views.logout, name='logout'),
+    path('', views.index, name='index'),
+    path('stations_overview', views.stations_overview, name='stations_overview'),
+    path('administration', views.administration, name='administration'),
+    path('administration_notes_update', views.administration_notes_update, name='administration_notes_update'),
+    path('station_view/<network_id>', views.station_view, name='station_view'),
     path('station_register', views.station_register, name='station_register'),
-    path('station_info', views.station_info, name='station_info'),
-    path('station_error', views.station_error, name='station_error'),
+    path('station_registration_resolve', views.station_registration_resolve, name='station_registration_resolve'),
+    path('station_status', views.station_status, name='station_status'),
     path('station_version', views.station_version, name='station_version'),
     path('station_update', views.station_update, name='station_update'),
+    path('station_error_resolve', views.station_error_resolve, name='station_error_resolve'),
+    path('station_delete', views.station_delete, name='station_delete'),
+    path('station_graph/<graph>', views.station_graph, name='station_graph'),
 ]
