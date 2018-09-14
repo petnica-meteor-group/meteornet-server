@@ -27,9 +27,8 @@ a:link, a:visited, a:hover, a:active {
     -webkit-transition: none;
     -o-transition: color 0 ease-in;
     transition: none;
-    border: 1px solid rgba(255, 255, 255, 0.5);
     border-radius: 5px;
-    background-color: rgba(100, 100, 120, 0.5);
+    background-color: rgba(220, 220, 255, 0.15);
     color: white;
 }
 
@@ -47,9 +46,8 @@ a:link, a:visited, a:hover, a:active {
 
 .card {
     text-align: center;
-    border: 1px solid rgba(255, 255, 255, 0.5);
     border-radius: 5px;
-    background-color: rgba(100, 100, 120, 0.5);
+    background-color: rgba(220, 220, 255, 0.15);
 }
 
 .card-header {
@@ -62,9 +60,8 @@ a:link, a:visited, a:hover, a:active {
 }
 
 .header {
-    border: 1px solid rgba(255, 255, 255, 0.5);
     border-radius: 5px;
-    background-color: rgba(100, 100, 120, 0.5);
+    background-color: rgba(0, 0, 20, 0.75);
     text-align: center;
     margin: 10px 0px 20px 0px;
     padding: 16px; }
@@ -83,9 +80,8 @@ a:link, a:visited, a:hover, a:active {
     }
 
     .header .nav-btn {
-        border: 1px solid rgba(255, 255, 255, 0.5);
         border-radius: 5px;
-        background-color: rgba(100, 100, 120, 0.5);
+        background-color: rgba(220, 220, 255, 0.15);
         width: 130px;
         display: inline-block;
         padding: 4px;
@@ -99,26 +95,23 @@ a:link, a:visited, a:hover, a:active {
     .header .login-menu {
         font-size: 15px;
         padding: 12px 20px 0px 20px;
-        border: 1px solid rgba(255, 255, 255, 0.5);
         border-radius: 5px;
-        background-color: rgba(100, 100, 120, 0.5); }
+        background-color: rgba(0, 0, 20, 0.75); }
 
         .header .login-menu .field {
             width: 180px;
 }
 
 .content {
-    border: 1px solid rgba(255, 255, 255, 0.5);
     border-radius: 5px;
-    background-color: rgba(100, 100, 120, 0.5);
+    background-color: rgba(0, 0, 20, 0.75);
     min-height: 450px;
     padding: 16px;
 }
 
 .footer {
-    border: 1px solid rgba(255, 255, 255, 0.5);
     border-radius: 5px;
-    background-color: rgba(100, 100, 120, 0.5);
+    background-color: rgba(0, 0, 20, 0.75);
     text-align: center;
     margin: 20px 0px 10px 0px;
     font-size: 12px;
