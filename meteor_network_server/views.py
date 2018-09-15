@@ -411,7 +411,8 @@ def station_version(request):
 @require_http_methods(["POST"])
 @csrf_exempt
 def station_update(request):
-    with open(stations.get_update_filepath(), 'rb') as zipfile:
+    filepath = stations.get_update_filepath()
+    with open(filepath, 'rb') as zipfile:
         wrapper = FileWrapper(zipfile)
         response = HttpResponse(wrapper, content_type='application/zip')
         response['Content-Disposition'] = 'attachment; filename=station_code.zip'
