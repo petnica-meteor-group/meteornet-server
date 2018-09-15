@@ -73,7 +73,38 @@ def format_last_updated(last_updated):
 
 @require_http_methods(["GET"])
 def index(request):
-    context = { 'settings' : settings }
+    station_list = stations.get_current_list()
+
+    station_coordinates = []
+    center = { 'longitude' : 0, 'latitude' : 0 }
+    count = 0
+    for station in station_list:
+        station_coordinates.append({ 'longitude' : station.longitude, 'latitude' : station.latitude })
+        center['longitude'] += station.longitude
+        center['latitude'] += station.latitude
+        count += 1
+    center['longitude'] /= count
+    center['latitude'] /= count
+
+    max_distance = 0
+    for station in station_list:
+        distance = math.sqrt(
+            (center['longitude'] - station.longitude) ** 2 +
+            (center['latitude'] - station.latitude) ** 2
+        )
+        if distance > max_distance:
+            max_distance = distance
+
+    if max_distance > 0:
+        zoom_level = -math.log(256 * max_distance / 40000000 * 100)
+    else:
+        zoom_level = 8
+    context = {
+        'station_coordinates' : station_coordinates,
+        'center' : center,
+        'zoom_level' : zoom_level,
+        'settings' : settings
+    }
     return render(request, 'index.html', context)
 
 @require_http_methods(["GET"])

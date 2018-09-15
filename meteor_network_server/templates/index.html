@@ -1,12 +1,37 @@
 {% extends 'base.html' %}
 
 {% block header %}
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/index.css' %}">
+{% endblock %}
+
+{% block scripts %}
+<script src="http://www.openlayers.org/api/OpenLayers.js"></script>
+<script>
+    map = new OpenLayers.Map("map");
+    map.addLayer(new OpenLayers.Layer.OSM());
+
+    var markers = new OpenLayers.Layer.Markers("Markers");
+    {% for coordinates in station_coordinates %}
+    var lonLat = new OpenLayers.LonLat({{ coordinates.longitude }}, {{ coordinates.latitude }})
+        .transform(
+            new OpenLayers.Projection("EPSG:4326"),
+            map.getProjectionObject()
+    );
+    markers.addMarker(new OpenLayers.Marker(lonLat));
+    {% endfor %}
+    map.addLayer(markers);
+
+    var lonLat = new OpenLayers.LonLat({{ center.longitude }}, {{ center.latitude }})
+        .transform(
+            new OpenLayers.Projection("EPSG:4326"),
+            map.getProjectionObject()
+    );
+    console.log(lonLat);
+    map.setCenter (lonLat, {{ zoom_level }});
+</script>
 {% endblock %}
 
 {% block content %}
-<div class="title">Map</div>
-<div align="center">
-    <iframe src="https://www.doogal.co.uk/KmlViewer.php?url=https://www.doogal.co.uk/UploadedKml/4d1e81bb-cf18-4836-8656-d98eef6848b3.kml"
-        width="100%" height="600" frameborder="0"></iframe>
-</div>
+<div id="map" class="map"></div>
 {% endblock %}
