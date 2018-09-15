@@ -97,7 +97,7 @@ def index(request):
 
     if max_distance > 0:
         zoom_level = -math.log(256 * max_distance / 40000000 * 100)
-        if zoom_level < 7: zoom_level = 7
+        if zoom_level > 7: zoom_level = 7
     else:
         zoom_level = 7
     context = {
