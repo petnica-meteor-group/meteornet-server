@@ -45,6 +45,7 @@ def login(request):
     return redirect('/')
 
 @require_http_methods(["POST"])
+@login_required
 def logout(request):
     django_logout(request)
     return redirect('/')
@@ -197,6 +198,7 @@ def administration(request):
     return render(request, 'administration.html', context)
 
 @require_http_methods(["POST"])
+@login_required
 def administration_notes_update(request):
     notes = AdministrationNotes.objects.all().first()
     notes.content = request.POST.get('notes', '')
@@ -382,8 +384,8 @@ def station_view(request, network_id):
     }
     return render(request, 'station_view.html', context)
 
-@csrf_exempt
 @require_http_methods(["POST"])
+@csrf_exempt
 def station_register(request):
     return HttpResponse(stations.register(request.POST))
 
@@ -393,21 +395,21 @@ def station_registration_resolve(request):
     stations.registration_resolve(request.POST.get('network_id', ''), request.POST.get('approve', None) == 'True')
     return redirect('/administration')
 
-@csrf_exempt
 @require_http_methods(["POST"])
-def station_status(request):
+@csrf_exempt
+def station_data(request):
     if stations.update_status(request.POST):
         return HttpResponse(RESPONSE_SUCCESS)
     else:
         return HttpResponse(RESPONSE_FAILURE)
 
-@csrf_exempt
 @require_http_methods(["POST"])
+@csrf_exempt
 def station_version(request):
     return HttpResponse(stations.get_version())
 
-@csrf_exempt
 @require_http_methods(["POST"])
+@csrf_exempt
 def station_update(request):
     with open(stations.get_update_filepath(), 'rb') as zipfile:
         wrapper = FileWrapper(zipfile)
