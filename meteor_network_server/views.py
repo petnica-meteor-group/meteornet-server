@@ -98,7 +98,7 @@ def index(request):
     if max_distance > 0:
         zoom_level = -math.log(256 * max_distance / 40000000 * 100)
     else:
-        zoom_level = 8
+        zoom_level = 7
     context = {
         'station_coordinates' : station_coordinates,
         'center' : center,
