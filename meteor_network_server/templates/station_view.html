@@ -14,23 +14,27 @@
         return new Promise(resolve => setTimeout(resolve, ms));
     }
 
-    async function openMap() {
+    async function initMap() {
+        await sleep(500);
+        map = new OpenLayers.Map("map");
+        map.addLayer(new OpenLayers.Layer.OSM());
+
+        var markers = new OpenLayers.Layer.Markers("Markers");
+        var lonLat = new OpenLayers.LonLat({{ station.longitude }}, {{ station.latitude }})
+            .transform(
+                new OpenLayers.Projection("EPSG:4326"),
+                map.getProjectionObject()
+        );
+        markers.addMarker(new OpenLayers.Marker(lonLat));
+        map.addLayer(markers);
+
+        map.setCenter(lonLat, 7);
+    }
+
+    function openMap() {
         if (!initialized) {
-            await sleep(500);
-            map = new OpenLayers.Map("map");
-            map.addLayer(new OpenLayers.Layer.OSM());
-
-            var markers = new OpenLayers.Layer.Markers("Markers");
-            var lonLat = new OpenLayers.LonLat({{ station.longitude }}, {{ station.latitude }})
-                .transform(
-                    new OpenLayers.Projection("EPSG:4326"),
-                    map.getProjectionObject()
-            );
-            markers.addMarker(new OpenLayers.Marker(lonLat));
-            map.addLayer(markers);
-
-            map.setCenter(lonLat, 7);
             initialized = true;
+            initMap();
         }
     }
 </script>
@@ -49,7 +53,9 @@
 <button class="btn btn-block btn-show-map" data-toggle="collapse" data-target="#show-map" onclick="openMap()">Show On Map</button>
 <div id="show-map" class="collapse">
     <br/>
-    <div id="map" class="map"></div>
+    <div class="map-collapse">
+        <div id="map" class="map"></div>
+    </div>
 </div>
 <hr/>
 {% if errors|length > 0 %}
