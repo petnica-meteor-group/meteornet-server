@@ -132,19 +132,7 @@ def stations_overview(request):
             station_card['height'] = station.height
             station_card['last_updated'] = format_last_updated(station.last_updated)
 
-            if len(stations.get_errors(station)) > 0:
-                status_text = "Error(s) occured!"
-                status_color = 'red'
-            elif (timezone.now() - station.last_updated).total_seconds() // 3600 > 6:
-                status_text = "Not connecting"
-                status_color = 'orange'
-            elif (timezone.now() - station.last_updated).total_seconds() // 3600 > 72:
-                status_text = "Disconnected"
-                status_color = 'black'
-            else:
-                status_text = "Good"
-                status_color = '#00CC00'
-
+            status_text, status_color = stations.get_status(station)
             station_card['status_text'] = status_text
             station_card['status_color'] = status_color
 
@@ -387,7 +375,10 @@ def station_view(request, network_id):
 @require_http_methods(["POST"])
 @csrf_exempt
 def station_register(request):
-    return HttpResponse(stations.register(request.POST))
+    data = request.POST.get('json', None)
+    if data == None: return HttpResponse(RESPONSE_FAILURE)
+    data = json.loads(data)
+    return HttpResponse(stations.register(data))
 
 @require_http_methods(["POST"])
 @login_required
@@ -398,7 +389,10 @@ def station_registration_resolve(request):
 @require_http_methods(["POST"])
 @csrf_exempt
 def station_data(request):
-    if stations.update_status(request.POST):
+    data = request.POST.get('json', None)
+    if data == None: return HttpResponse(RESPONSE_FAILURE)
+    data = json.loads(data)
+    if stations.new_data(data):
         return HttpResponse(RESPONSE_SUCCESS)
     else:
         return HttpResponse(RESPONSE_FAILURE)

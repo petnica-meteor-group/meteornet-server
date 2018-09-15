@@ -15,10 +15,6 @@ def register(data):
     if Station.objects.filter(approved=False).count() >= MAX_UNAPPROVED_STATIONS:
         return ''
 
-    data = data.get('status', None)
-    if data == None: return ''
-    data = json.loads(data)
-
     station = Station()
     for key in data:
         if type(data[key]) is list or type(data[key]) is dict:
@@ -38,11 +34,7 @@ def register(data):
 
     return network_id
 
-def update_status(data):
-    data = data.get('status', None)
-    if data == None: return False
-    data = json.loads(data)
-
+def new_data(data):
     try:
         station = Station.objects.get(network_id=data['network_id'])
         if not station.approved:
@@ -239,13 +231,29 @@ def get_recent_measurements(station):
     for component_object in Component.objects.filter(station=station.id):
         component_measurements = { 'component' : component_object.name, 'batches' : [] }
         for measurement_batch_object in MeasurementBatch.objects.filter(
-        component=component_object.id, datetime__gt=(timezone.now() - timedelta(days=RECENT_MEASUREMENTS_DAYS))):
+        component=component_object.id,
+        datetime__gt=(timezone.now() - timedelta(days=RECENT_MEASUREMENTS_DAYS))).order_by('datetime'):
             batch = { 'datetime' : measurement_batch_object.datetime, 'measurements' : [] }
             for measurement_object in Measurement.objects.filter(batch=measurement_batch_object.id):
                 batch['measurements'].append({ 'key' : measurement_object.key, 'value' : measurement_object.value })
             component_measurements['batches'].append(batch)
         measurements.append(component_measurements)
     return measurements
+
+def get_status(station):
+    if len(get_errors(station)) > 0:
+        status_text = "Error(s) occured!"
+        status_color = 'red'
+    elif (timezone.now() - station.last_updated).total_seconds() // 3600 > 6:
+        status_text = "Not connecting"
+        status_color = 'orange'
+    elif (timezone.now() - station.last_updated).total_seconds() // 3600 > 72:
+        status_text = "Disconnected"
+        status_color = 'black'
+    else:
+        status_text = "Good"
+        status_color = '#00CC00'
+    return status_text, status_color
 
 def get_version():
     from .station_code.internals import constants
