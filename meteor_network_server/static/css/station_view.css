@@ -53,6 +53,16 @@
     margin: auto;
 }
 
+.btn-show-map {
+    width: 120px;
+    margin: auto;
+}
+
+.map {
+    width: 100%;
+    height: 400px;
+}
+
 .coordinates {
     font-size: 14px;
     text-align: center;

@@ -27,8 +27,7 @@
             new OpenLayers.Projection("EPSG:4326"),
             map.getProjectionObject()
     );
-    console.log(lonLat);
-    map.setCenter (lonLat, {{ zoom_level }});
+    map.setCenter(lonLat, {{ zoom_level }});
 </script>
 {% endblock %}
 

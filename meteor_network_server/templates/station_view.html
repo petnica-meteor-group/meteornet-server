@@ -5,6 +5,37 @@
 <link rel="stylesheet" href="{% static 'css/station_view.css' %}">
 {% endblock %}
 
+{% block scripts %}
+<script src="https://openlayers.org/api/OpenLayers.js"></script>
+<script>
+    var initialized = false;
+
+    function sleep(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    async function openMap() {
+        if (!initialized) {
+            await sleep(500);
+            map = new OpenLayers.Map("map");
+            map.addLayer(new OpenLayers.Layer.OSM());
+
+            var markers = new OpenLayers.Layer.Markers("Markers");
+            var lonLat = new OpenLayers.LonLat({{ station.longitude }}, {{ station.latitude }})
+                .transform(
+                    new OpenLayers.Projection("EPSG:4326"),
+                    map.getProjectionObject()
+            );
+            markers.addMarker(new OpenLayers.Marker(lonLat));
+            map.addLayer(markers);
+
+            map.setCenter(lonLat, 7);
+            initialized = true;
+        }
+    }
+</script>
+{% endblock %}
+
 {% block content %}
 {% load nbsp %}
 <div class="title">
@@ -14,6 +45,12 @@
     </div>
 </div>
 <div class="comment">{{ station.comment }}</div>
+<br/>
+<button class="btn btn-block btn-show-map" data-toggle="collapse" data-target="#show-map" onclick="openMap()">Show On Map</button>
+<div id="show-map" class="collapse">
+    <br/>
+    <div id="map" class="map"></div>
+</div>
 <hr/>
 {% if errors|length > 0 %}
 <div class="subtitle">Errors</div>
@@ -73,8 +110,8 @@
                 {% endfor %}
                 <br/>
                 <button class="btn btn-block btn-show-plots" data-toggle="collapse" data-target="#show-plots-{{ component.name }}">Show Plots</button>
-                <br/>
                 <div id="show-plots-{{ component.name }}" class="collapse">
+                    <br/>
                     {% for row in component.plot_rows %}
                     <div class="row">
                         <div class="col-{{ row.sidecol_size }}"></div>
