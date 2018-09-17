@@ -74,33 +74,37 @@ def format_last_updated(last_updated):
 
 @require_http_methods(["GET"])
 def index(request):
-    station_list = stations.get_current_list()
-
     station_coordinates = []
     center = { 'longitude' : 0, 'latitude' : 0 }
-    count = 0
-    for station in station_list:
-        station_coordinates.append({ 'longitude' : station.longitude, 'latitude' : station.latitude })
-        center['longitude'] += station.longitude
-        center['latitude'] += station.latitude
-        count += 1
-    center['longitude'] /= count
-    center['latitude'] /= count
+    zoom_level = 1
 
-    max_distance = 0
-    for station in station_list:
-        distance = math.sqrt(
-            (center['longitude'] - station.longitude) ** 2 +
-            (center['latitude'] - station.latitude) ** 2
-        )
-        if distance > max_distance:
-            max_distance = distance
+    if stations.get_current_list().count() > 0:
+        station_list = stations.get_current_list()
 
-    if max_distance > 0:
-        zoom_level = -math.log(256 * max_distance / 40000000 * 100)
-        if zoom_level > 7: zoom_level = 7
-    else:
-        zoom_level = 7
+        count = 0
+        for station in station_list:
+            station_coordinates.append({ 'longitude' : station.longitude, 'latitude' : station.latitude })
+            center['longitude'] += station.longitude
+            center['latitude'] += station.latitude
+            count += 1
+        center['longitude'] /= count
+        center['latitude'] /= count
+
+        max_distance = 0
+        for station in station_list:
+            distance = math.sqrt(
+                (center['longitude'] - station.longitude) ** 2 +
+                (center['latitude'] - station.latitude) ** 2
+            )
+            if distance > max_distance:
+                max_distance = distance
+
+        if max_distance > 0:
+            zoom_level = -math.log(256 * max_distance / 40000000 * 100)
+            if zoom_level > 7: zoom_level = 7
+        else:
+            zoom_level = 7
+
     context = {
         'station_coordinates' : station_coordinates,
         'center' : center,
