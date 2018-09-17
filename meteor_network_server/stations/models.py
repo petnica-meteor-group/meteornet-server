@@ -1,6 +1,8 @@
 from django.db.models import Model, CharField, FloatField, TextField, ManyToManyField, \
-                             DateTimeField, BooleanField, ForeignKey, CASCADE
+                             DateTimeField, BooleanField, ForeignKey, CASCADE, SET_DEFAULT
 from django.utils import timezone
+
+from .status_models import *
 
 class Person(Model):
     name = CharField(max_length=64, default='Test Person')
@@ -17,6 +19,7 @@ class Station(Model):
     maintainers = ManyToManyField(Person)
     last_updated = DateTimeField(default=timezone.now)
     approved = BooleanField(default=False)
+    status = ForeignKey(Status, default=lambda: Status.objects.first(), on_delete=SET_DEFAULT)
 
 class Component(Model):
     name = CharField(max_length=64, default='Test Component')
