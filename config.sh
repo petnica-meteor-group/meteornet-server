@@ -7,6 +7,9 @@ DOMAIN_NAME=meteori.petnica.rs
 STATIC_DIR=/srv/http/$MAIN_APP/static
 MEDIA_DIR=/srv/http/$MAIN_APP/media
 
+SECRET_KEY_PATH=$PROJECT_DIR/$MAIN_APP/secret_key
+DB_PASS_PATH=$PROJECT_DIR/$MAIN_APP/db_password
+
 SSL_KEY_PATH=/etc/ssl/private/nginx-selfsigned.key
 SSL_CERT_PATH=/etc/ssl/certs/nginx-selfsigned.crt
 SSL_DHPARAM_PATH=/etc/ssl/certs/dhparam.pem
@@ -41,6 +44,17 @@ for template in ${templates[@]}; do
 
     ((counter++))
 done;
+
+if [ ! -f $SECRET_KEY_PATH ]; then
+    echo $(uuidgen) >$SECRET_KEY_PATH
+fi
+
+if [ ! -f $DB_PASS_PATH ]; then
+    echo -n "DB Password: "
+    read -s db_pass
+    echo
+    echo $db_pass >$DB_PASS_PATH
+fi
 
 mkdir -p logs
 touch logs/system.log
