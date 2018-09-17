@@ -18,6 +18,8 @@ NGINX_SERVERS_DIR=/etc/nginx/sites-enabled
 SOCKET_PATH=/tmp/$MAIN_APP.sock
 NGINX_USER=www-data
 
+DB_NAME=mndb
+
 templates=("nginx_template.conf" "uwsgi_template.ini" "settings_template.py")
 configs=("nginx.conf" "uwsgi.ini" "settings.py")
 counter=0
@@ -38,6 +40,7 @@ for template in ${templates[@]}; do
             | sed "s~<ssl_cert_path>~$SSL_CERT_PATH~g" \
             | sed "s~<ssl_dhparam_path>~$SSL_DHPARAM_PATH~g" \
             | sed "s~<uwsgi_params_path>~$UWSGI_PARAMS_PATH~g" \
+            | sed "s~<db_name>~$DB_NAME~g" \
             )
 
     echo "$content" >$PROJECT_DIR/$MAIN_APP/$config
