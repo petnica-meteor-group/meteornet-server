@@ -406,9 +406,9 @@ def station_data(request):
 def station_version(request):
     return HttpResponse(stations.get_version())
 
-@require_http_methods(["POST"])
+@require_http_methods(["GET", "POST"])
 @csrf_exempt
-def station_update(request):
+def station_code_download(request):
     filepath = stations.get_update_filepath()
     with open(filepath, 'rb') as zipfile:
         wrapper = FileWrapper(zipfile)

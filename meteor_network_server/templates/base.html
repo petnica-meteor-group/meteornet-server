@@ -120,15 +120,21 @@
                     {% endif %}
                     </div>
                 </div>
-                {% if user.is_authenticated %}
                 <div class="row nav-row">
-                    <div class="col-3"></div>
+                    {% if user.is_authenticated %}
+                    <div class="col-2"></div>
                     <div class="col-2"><a href="/"><span class="nav-btn">Map</span></a></div>
+                    <div class="col-2"><a href="/station_code_download"><span class="nav-btn">Station Code</span></a></div>
                     <div class="col-2"><a href="/stations_overview"><span class="nav-btn">Stations</span></a></div>
                     <div class="col-2"><a href="/administration"><span class="nav-btn">Administration</span></a></div>
-                    <div class="col-3"></div>
+                    <div class="col-2"></div>
+                    {% else %}
+                    <div class="col-4"></div>
+                    <div class="col-2"><a href="/"><span class="nav-btn">Map</span></a></div>
+                    <div class="col-2"><a href="/station_code_download"><span class="nav-btn">Station Code</span></a></div>
+                    <div class="col-4"></div>
+                    {% endif %}
                 </div>
-                {% endif %}
             </div>
             <div class="col-2"></div>
         </div>
