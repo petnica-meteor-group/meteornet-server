@@ -1,13 +1,45 @@
-from django.db.models import Model, CharField, FloatField, TextField, ManyToManyField, \
+from django.db.models import Model, CharField, FloatField, IntegerField, TextField, ManyToManyField, \
                              DateTimeField, BooleanField, ForeignKey, CASCADE, SET_DEFAULT
 from django.utils import timezone
-
-from .status_models import *
 
 class Person(Model):
     name = CharField(max_length=64, default='Test Person')
     phone = CharField(max_length=64, default='')
     email = CharField(max_length=64, default='')
+
+class Status(Model):
+    name = CharField(max_length=64, default='Test Status')
+    color = CharField(max_length=16, default='#00CC00')
+    severity = IntegerField(default=0)
+
+def init_statuses():
+    if Status.objects.all().count() == 0:
+        data = [
+                ("Good", '#00CC00'),
+                ("Not connecting", '#FFFF19'),
+                ("Rule(s) broken", '#FFA500'),
+                ("Error(s) occured", '#CC0000'),
+                ("Disconnected", '#000000'),
+        ]
+        for i, d in enumerate(data):
+            status = Status()
+            status.name = d[0]
+            status.color = d[1]
+            status.severity = i
+            status.save()
+
+def get_status_rule_broken():
+    init_statuses()
+    return Status.objects.get(name="Rule broken").id
+
+def get_status_default():
+    init_statuses()
+    return Status.objects.get(name="Good").id
+
+class StatusRule(Model):
+    expression = CharField(max_length=256)
+    message = CharField(max_length=128)
+    status = ForeignKey(Status, default=get_status_rule_broken, on_delete=CASCADE)
 
 class Station(Model):
     network_id = CharField(max_length=64)
@@ -19,7 +51,7 @@ class Station(Model):
     maintainers = ManyToManyField(Person)
     last_updated = DateTimeField(default=timezone.now)
     approved = BooleanField(default=False)
-    status = ForeignKey(Status, default=lambda: Status.objects.first(), on_delete=SET_DEFAULT)
+    status = ForeignKey(Status, default=get_status_default, on_delete=SET_DEFAULT)
 
 class Component(Model):
     name = CharField(max_length=64, default='Test Component')

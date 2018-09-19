@@ -48,7 +48,7 @@
     margin: auto;
 }
 
-.btn-show-plots {
+.btn-show-graphs {
     width: 120px;
     margin: auto;
 }
@@ -110,6 +110,6 @@
     margin: auto;
 }
 
-.plot {
+.graph {
     width: 90%;
 }
