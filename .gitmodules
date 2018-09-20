@@ -1,0 +1,3 @@
+[submodule "meteornet_server/stations/station_code"]
+	path = meteornet_server/stations/station_code
+	url = https://github.com/petnica-meteor-group/meteornet-station
