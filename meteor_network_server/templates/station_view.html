@@ -48,6 +48,8 @@
         ϕ: {{ station.latitude|floatformat:4 }}, λ: {{ station.longitude|floatformat:4 }}, Height: {{ station.height|floatformat:2 }}m
     </div>
 </div>
+<div class="status">Status: <span style="color: {{ station.status.color }};">{{ station.status.name }}</span></div>
+<br/>
 <div class="comment">{{ station.comment }}</div>
 <br/>
 <button class="btn btn-block btn-show-map" data-toggle="collapse" data-target="#show-map" onclick="openMap()">Show On Map</button>
@@ -95,7 +97,7 @@
 {% endfor %}
 <br/>
 {% endif %}
-{% if components|length > 0 %}
+{% if component_data|length > 0 %}
 <div class="subtitle">Components</div>
 {% for component in component_data %}
 <div class="row">

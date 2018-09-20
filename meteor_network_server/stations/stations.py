@@ -3,6 +3,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.utils import timezone
 from django.utils.timezone import make_aware
 from django.db import transaction, connection
+from django.shortcuts import get_object_or_404
 
 from datetime import timedelta, datetime
 from os import path
@@ -48,134 +49,134 @@ def get_errors(station):
 def get_maintainers(station):
     return station.maintainers.all()
 
-
 def get_component_data(station):
-    component_data = []
+    with transaction.atomic():
+        component_data = []
 
-    for component_object in Component.objects.filter(station=station.id):
-        component = {}
+        for component_object in Component.objects.filter(station=station.id):
+            component = {}
 
-        component['name'] = component_object.name
+            component['name'] = component_object.name
 
-        batches = []
-        for measurement_batch_object in MeasurementBatch.objects.filter(
-        component=component_object.id,
-        datetime__gt=(timezone.now() - timedelta(days=RECENT_MEASUREMENTS_DAYS))).order_by('datetime'):
-            batch = { 'datetime' : measurement_batch_object.datetime, 'measurements' : [] }
-            for measurement_object in Measurement.objects.filter(batch=measurement_batch_object.id):
-                batch['measurements'].append({ 'key' : measurement_object.key, 'value' : measurement_object.value })
-            batches.append(batch)
+            batches = []
+            for measurement_batch_object in MeasurementBatch.objects.filter(
+            component=component_object.id,
+            datetime__gt=(timezone.now() - timedelta(days=RECENT_MEASUREMENTS_DAYS))).order_by('datetime'):
+                batch = { 'datetime' : measurement_batch_object.datetime, 'measurements' : [] }
+                for measurement_object in Measurement.objects.filter(batch=measurement_batch_object.id):
+                    batch['measurements'].append({ 'key' : measurement_object.key, 'value' : measurement_object.value })
+                batches.append(batch)
 
-        timedeltas = []
-        for i in range(1, len(batches)):
-            timedeltas.append(batches[i    ]['datetime'] -
-                              batches[i - 1]['datetime'])
-        timedeltas = sorted(timedeltas)
-        if len(timedeltas) == 0:
-            median_timedelta = timedelta(0)
-        else:
-            median_timedelta = timedeltas[len(timedeltas) // 2]
-        current_datetime = timezone.now()
+            timedeltas = []
+            for i in range(1, len(batches)):
+                timedeltas.append(batches[i    ]['datetime'] -
+                                  batches[i - 1]['datetime'])
+            timedeltas = sorted(timedeltas)
+            if len(timedeltas) == 0:
+                median_timedelta = timedelta(0)
+            else:
+                median_timedelta = timedeltas[len(timedeltas) // 2]
+            current_datetime = timezone.now()
 
-        def extract_num_unit(string_value):
-            string_value = str(string_value)
-            num = float('NaN')
-            cutout = len(string_value)
-            for i in range(1, len(string_value) + 1):
-                try:
-                    num = float(string_value[:i])
-                except ValueError:
-                    cutout = i - 1
-                    break
-            return num, string_value[cutout:]
+            def extract_num_unit(string_value):
+                string_value = str(string_value)
+                num = float('NaN')
+                cutout = len(string_value)
+                for i in range(1, len(string_value) + 1):
+                    try:
+                        num = float(string_value[:i])
+                    except ValueError:
+                        cutout = i - 1
+                        break
+                return num, string_value[cutout:]
 
-        current_values_data = {}
-        graphs_data = {}
-        for batch in batches:
-            recent_batch = (current_datetime - batch['datetime']).total_seconds() // 3600 < CURRENT_VALUES_WINDOW_HOURS
+            current_values_data = {}
+            graphs_data = {}
+            for batch in batches:
+                recent_batch = (current_datetime - batch['datetime']).total_seconds() // 3600 < CURRENT_VALUES_WINDOW_HOURS
 
-            for measurement in batch['measurements']:
-                key = measurement['key']
-                value = measurement['value']
-                if recent_batch:
-                    num, unit = extract_num_unit(value)
-                    if math.isnan(num):
-                        current_values_data[key] = value
+                for measurement in batch['measurements']:
+                    key = measurement['key']
+                    value = measurement['value']
+                    if recent_batch:
+                        num, unit = extract_num_unit(value)
+                        if math.isnan(num):
+                            current_values_data[key] = value
+                        else:
+                            current_values_data[key] = "{:8.2f}".format(num) + unit
+
+                    if key in graphs_data:
+                        data = graphs_data[key]
+                        previous_datetime = data['values'][-1]['x'][-1]
+                        current_datetime = batch['datetime']
+                        if (current_datetime - previous_datetime) > 2.5 * median_timedelta:
+                            data['values'].append({ 'x' : [], 'y' : [] })
                     else:
-                        current_values_data[key] = "{:8.2f}".format(num) + unit
+                        data = { 'values' : [ { 'x' : [], 'y' : [] } ] }
+                        graphs_data[key] = data
 
-                if key in graphs_data:
-                    data = graphs_data[key]
-                    previous_datetime = data['values'][-1]['x'][-1]
-                    current_datetime = batch['datetime']
-                    if (current_datetime - previous_datetime) > 2.5 * median_timedelta:
-                        data['values'].append({ 'x' : [], 'y' : [] })
-                else:
-                    data = { 'values' : [ { 'x' : [], 'y' : [] } ] }
-                    graphs_data[key] = data
-
-                data['values'][-1]['x'].append(batch['datetime'])
-                if 'classes' in data:
-                    if not (value in data['classes']):
-                        data['class_ids'].append(data['class_ids'][-1] + 1)
-                        data['classes'].append(value)
-                    data['values'][-1]['y'].append(data['class_ids'][data['classes'].index(value)])
-                else:
-                    if 'unit' in data:
-                        previous_unit = data['unit']
-                    else:
-                        previous_unit = None
-                    num, unit = extract_num_unit(value)
-                    num = round(num, 2)
-                    if (previous_unit != None and unit != previous_unit) or math.isnan(num):
-                        data['class_ids'] = []
-                        data['classes'] = []
-                        for i in range(len(data['values'])):
-                            for j in range(len(data['values'][i]['y'])):
-                                y = str(data['values'][i]['y'][j]) + data['unit']
-                                if not (y in data['classes']):
-                                    new_id = data['class_ids'][-1] + 1 if len(data['class_ids']) > 0 else 1
-                                    data['class_ids'].append(new_id)
-                                    data['classes'].append(y)
-                                data['values'][i]['y'][j] = data['class_ids'][data['classes'].index(y)]
+                    data['values'][-1]['x'].append(batch['datetime'])
+                    if 'classes' in data:
                         if not (value in data['classes']):
-                            new_id = data['class_ids'][-1] + 1 if len(data['class_ids']) > 0 else 1
-                            data['class_ids'].append(new_id)
+                            data['class_ids'].append(data['class_ids'][-1] + 1)
                             data['classes'].append(value)
                         data['values'][-1]['y'].append(data['class_ids'][data['classes'].index(value)])
-                        if 'unit' in data: del data['unit']
                     else:
-                        data['values'][-1]['y'].append(num)
-                        data['unit'] = unit
+                        if 'unit' in data:
+                            previous_unit = data['unit']
+                        else:
+                            previous_unit = None
+                        num, unit = extract_num_unit(value)
+                        num = round(num, 2)
+                        if (previous_unit != None and unit != previous_unit) or math.isnan(num):
+                            data['class_ids'] = []
+                            data['classes'] = []
+                            for i in range(len(data['values'])):
+                                for j in range(len(data['values'][i]['y'])):
+                                    y = str(data['values'][i]['y'][j]) + data['unit']
+                                    if not (y in data['classes']):
+                                        new_id = data['class_ids'][-1] + 1 if len(data['class_ids']) > 0 else 1
+                                        data['class_ids'].append(new_id)
+                                        data['classes'].append(y)
+                                    data['values'][i]['y'][j] = data['class_ids'][data['classes'].index(y)]
+                            if not (value in data['classes']):
+                                new_id = data['class_ids'][-1] + 1 if len(data['class_ids']) > 0 else 1
+                                data['class_ids'].append(new_id)
+                                data['classes'].append(value)
+                            data['values'][-1]['y'].append(data['class_ids'][data['classes'].index(value)])
+                            if 'unit' in data: del data['unit']
+                        else:
+                            data['values'][-1]['y'].append(num)
+                            data['unit'] = unit
 
-        component['current_values'] = current_values_data.items()
+            component['current_values'] = list(current_values_data.items())
 
-        graphs = []
-        for key in graphs_data:
-            graph = (station.network_id + component['name'] + key).replace(' ', '_') + '.png'
-            data = graphs_data[key]
-            color = [ random.uniform(0, 1), random.uniform(0, 1), random.uniform(0, 1) ]
-            plt.figure(figsize=(12, 5))
-            if 'classes' in data:
-                plt.yticks(data['class_ids'], data['classes'], size='x-large')
-            else:
-                ax = plt.gca()
-                ax.yaxis.set_major_formatter(mticker.ScalarFormatter())
-                ax.yaxis.get_major_formatter().set_useOffset(False)
-            if 'unit' in data: plt.ylabel(data['unit'], rotation='horizontal', size='x-large', labelpad=25)
-            plt.title(key, size='xx-large')
-            plt.tick_params(axis='x', which='major', labelsize='large')
-            plt.tick_params(axis='y', which='major', labelsize='x-large')
-            for xy in data['values']:
-                plt.plot(xy['x'], xy['y'], color=color)
-            plt.savefig(path.join('/tmp', graph))
-            plt.close()
-            graphs.append(graph)
-        component['graphs'] = graphs
+            graphs = []
+            for key in graphs_data:
+                graph = (station.network_id + component['name'] + key).replace(' ', '_') + '.png'
+                data = graphs_data[key]
+                color = [ random.uniform(0, 1), random.uniform(0, 1), random.uniform(0, 1) ]
+                plt.figure(figsize=(12, 5))
+                if 'classes' in data:
+                    plt.yticks(data['class_ids'], data['classes'], size='x-large')
+                else:
+                    ax = plt.gca()
+                    ax.yaxis.set_major_formatter(mticker.ScalarFormatter())
+                    ax.yaxis.get_major_formatter().set_useOffset(False)
+                if 'unit' in data: plt.ylabel(data['unit'], rotation='horizontal', size='x-large', labelpad=25)
+                plt.title(key, size='xx-large')
+                plt.tick_params(axis='x', which='major', labelsize='large')
+                plt.tick_params(axis='y', which='major', labelsize='x-large')
+                for xy in data['values']:
+                    plt.plot(xy['x'], xy['y'], color=color)
+                plt.savefig(path.join('/tmp', graph))
+                plt.close()
+                graphs.append(graph)
+            component['graphs'] = graphs
 
-        component_data.append(component)
+            component_data.append(component)
 
-    return component_data
+        return component_data
 
 def register(data):
     if Station.objects.filter(approved=False).count() >= MAX_UNAPPROVED_STATIONS:
@@ -393,7 +394,7 @@ def get_code_filepath():
 def error_resolve(error_id):
     try:
         Error.objects.get(id=error_id).delete()
-        return True:
+        return True
     except Exception:
         pass
     return False

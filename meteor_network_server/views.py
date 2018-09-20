@@ -3,14 +3,17 @@ from django.core.exceptions import PermissionDenied
 from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
-from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import render, redirect
 from django.utils import timezone
 from django.contrib.auth import authenticate, login as django_login, logout as django_logout
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from wsgiref.util import FileWrapper
 
+from os import path
 import PIL
+import json
+import math
 
 from .models import *
 from .stations import stations
@@ -218,7 +221,7 @@ def station_view(request, network_id):
     component_data = stations.get_component_data(station)
 
     for component in component_data:
-        current_values = component['current_values'].items()
+        current_values = component['current_values']
         component['current_values_rows'] = []
         for i in range(0, len(current_values), COMPONENT_CURRENT_VALUES_PER_ROW):
             row = ''
@@ -230,7 +233,7 @@ def station_view(request, network_id):
             component['current_values_rows'].append(row)
 
         graphs = component['graphs']
-        component['graph_rows'] = []
+        component['graphs_rows'] = []
         for i in range(0, len(graphs), COMPONENT_GRAPHS_PER_ROW):
             row = {}
             row_graphs = []
@@ -242,7 +245,7 @@ def station_view(request, network_id):
             row['col_size'] = 12 // COMPONENT_GRAPHS_PER_ROW
             row['sidecol_size'] = (12 - len(row_graphs) * row['col_size']) // 2
 
-            component['graph_rows'].append(row)
+            component['graphs_rows'].append(row)
 
     context = {
         'station' : station,

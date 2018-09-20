@@ -1,7 +1,7 @@
 #!/bin/bash
 
 PROJECT_DIR="$( cd "$(dirname "$0")" ; pwd -P )"
-MAIN_APP=meteor_network_server
+MAIN_APP=meteornet_server
 DOMAIN_NAME=meteori.petnica.rs
 
 STATIC_DIR=/srv/http/$MAIN_APP/static
