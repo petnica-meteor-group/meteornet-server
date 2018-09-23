@@ -237,6 +237,10 @@ def update_status(station):
         station.status = status
         station.save()
 
+def update_statuses():
+    for station in Station.objects.filter(approved=True):
+        stations.update_status(station)
+
 def new_data(data):
     try:
         station = Station.objects.get(network_id=data['network_id'])

@@ -3,7 +3,7 @@
 from django.db import migrations, models
 import django.db.models.deletion
 import django.utils.timezone
-import meteor_network_server.stations.stations
+import meteornet_server.stations.stations
 
 
 class Migration(migrations.Migration):
@@ -93,13 +93,13 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('expression', models.CharField(max_length=256)),
                 ('message', models.CharField(max_length=128)),
-                ('status', models.ForeignKey(default=meteor_network_server.stations.stations.get_status_rule_broken, on_delete=django.db.models.deletion.CASCADE, to='meteor_network_server.Status')),
+                ('status', models.ForeignKey(default=meteornet_server.stations.stations.get_status_rule_broken, on_delete=django.db.models.deletion.CASCADE, to='meteor_network_server.Status')),
             ],
         ),
         migrations.AddField(
             model_name='station',
             name='status',
-            field=models.ForeignKey(default=meteor_network_server.stations.stations.get_status_default, on_delete=django.db.models.deletion.SET_DEFAULT, to='meteor_network_server.Status'),
+            field=models.ForeignKey(default=meteornet_server.stations.stations.get_status_default, on_delete=django.db.models.deletion.SET_DEFAULT, to='meteor_network_server.Status'),
         ),
         migrations.AddField(
             model_name='measurement',
