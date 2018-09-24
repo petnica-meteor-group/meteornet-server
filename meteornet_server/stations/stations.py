@@ -239,9 +239,9 @@ def registration_resolve(network_id, approve):
         pass
     return False
 
-def notify_maintainers(station):
+def notify_maintainers(station, rules_broken):
     emails = []
-    for maintainer in station.maintainers:
+    for maintainer in station.maintainers.all():
         try:
             validate_email(maintainer.email)
             emails.append(maintainer.email)
@@ -249,7 +249,9 @@ def notify_maintainers(station):
             pass
 
     subject = '[' + settings.SITE_NAME + '] Station notification'
-    message = station.name + ' status changed to ' + station.status.name + '!'
+    message = station.name + ' status changed to ' + station.status.name + '!\n\n'
+    for rule_broken in rules_broken:
+        message += '\t- ' + rule_broken.message + '\n'
 
     '''
     mail.send_mail(
@@ -263,12 +265,12 @@ def notify_maintainers(station):
 
 def update_status(station):
     previous_status = station.status
+    rules_broken = []
     if (timezone.now() - station.last_updated).total_seconds() // 3600 > DISCONNECTED_HOURS:
         status = Status.objects.get(name="Disconnected")
     elif len(get_errors(station)) > 0:
         status = Status.objects.get(name="Error(s) occured")
     else:
-        rules_broken = []
         for rule in StatusRule.objects.all():
             pass
 
@@ -281,7 +283,7 @@ def update_status(station):
     station.status = status
 
     if station.status.severity > previous_status.severity:
-        notify_maintainers(station)
+        notify_maintainers(station, rules_broken)
 
     station.save()
 

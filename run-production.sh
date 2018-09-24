@@ -15,5 +15,7 @@ else
 fi
 
 sudo ./manage.py runperiodic &
+periodic_pid=$!
 sudo uwsgi --ini $MAIN_APP/uwsgi.ini --uid=$user --gid=$user
+sudo kill -s INT $periodic_pid 2>/dev/null >/dev/null
 sudo rm -f $SOCKET_PATH

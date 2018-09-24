@@ -9,9 +9,9 @@ class Command(BaseCommand):
     def update_statuses(self):
         with self.lock:
             while True:
-                self.condition.wait(timeout=900)
-                if self.done: break
                 stations.update_statuses()
+                if self.done: break
+                self.condition.wait(timeout=900)
 
     def delete_old_data(self):
         with self.lock:
