@@ -4,6 +4,7 @@ from django.utils import timezone
 from django.utils.timezone import make_aware
 from django.db import transaction, connection
 from django.shortcuts import get_object_or_404
+from django.core import mail
 
 from datetime import timedelta, datetime
 from os import path
@@ -20,6 +21,7 @@ from .models import *
 
 MAX_UNAPPROVED_STATIONS = 30
 RECENT_MEASUREMENTS_DAYS = 7
+OLD_DATA_DAYS = 365
 CURRENT_VALUES_WINDOW_HOURS = 3
 
 def get_current_list():
@@ -214,32 +216,51 @@ def registration_resolve(network_id, approve):
         pass
     return False
 
+def notify_maintainers(station):
+    emails = []
+    for maintainer in station.maintainers:
+        emails.append(maintainer.email)
+
+    mail.send_mail(
+        'Petnica Meteor Network: Station notification',
+        'Test Message.',
+        'from@example.com',
+        emails,
+        fail_silently=False,
+    )
+
 def update_status(station):
-    with transaction.atomic():
-        connection.cursor().execute('LOCK {}'.format(Status._meta.db_table))
+    previous_status = station.status
+    if (timezone.now() - station.last_updated).total_seconds() // 3600 > 72:
+        status = Status.objects.get(name="Disconnected")
+    elif len(get_errors(station)) > 0:
+        status = Status.objects.get(name="Error(s) occured")
+    else:
+        rules_broken = []
+        for rule in StatusRule.objects.all():
+            pass
 
-        if (timezone.now() - station.last_updated).total_seconds() // 3600 > 72:
-            status = Status.objects.get(name="Disconnected")
-        elif len(get_errors(station)) > 0:
-            status = Status.objects.get(name="Error(s) occured")
+        if len(rules_broken) > 0:
+            status = Status.objects.get(name="Rule(s) broken")
+        elif (timezone.now() - station.last_updated).total_seconds() // 3600 > 6:
+            status = Status.objects.get(name="Not connecting")
         else:
-            rules_broken = []
-            for rule in StatusRule.objects.all():
-                pass
+            status = Status.objects.all().first()
+    station.status = status
 
-            if len(rules_broken) > 0:
-                status = Status.objects.get(name="Rule(s) broken")
-            elif (timezone.now() - station.last_updated).total_seconds() // 3600 > 6:
-                status = Status.objects.get(name="Not connecting")
-            else:
-                status = Status.objects.all().first()
+    if station.status.severity > previous_status.severity:
+        notify_maintainers(station)
 
-        station.status = status
-        station.save()
+    station.save()
 
 def update_statuses():
     for station in Station.objects.filter(approved=True):
-        stations.update_status(station)
+        update_status(station)
+
+def delete_old_data():
+    for measurement_batch in MeasurementBatch.objects.filter(
+    datetime__lt=(timezone.now() - timedelta(days=OLD_DATA_DAYS))):
+        measurement_batch.delete()
 
 def new_data(data):
     try:

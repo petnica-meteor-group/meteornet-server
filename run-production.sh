@@ -14,5 +14,6 @@ else
     user=$USER
 fi
 
+sudo ./manage.py runperiodic &
 sudo uwsgi --ini $MAIN_APP/uwsgi.ini --uid=$user --gid=$user
 sudo rm -f $SOCKET_PATH
