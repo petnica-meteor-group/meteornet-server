@@ -5,6 +5,8 @@ from django.utils.timezone import make_aware
 from django.db import transaction, connection
 from django.shortcuts import get_object_or_404
 from django.core import mail
+from django.core.validators import validate_email
+from django.conf import settings
 
 from datetime import timedelta, datetime
 from os import path
@@ -23,6 +25,9 @@ MAX_UNAPPROVED_STATIONS = 30
 RECENT_MEASUREMENTS_DAYS = 7
 OLD_DATA_DAYS = 365
 CURRENT_VALUES_WINDOW_HOURS = 3
+DISCONNECTED_HOURS = 72
+NOT_CONNECTING_HOURS = 6
+NOTIFICATION_EMAIL = 'pmg@' + settings.DOMAIN_NAME
 
 def get_current_list():
     return Station.objects.filter(approved=True)
@@ -114,7 +119,7 @@ def get_component_data(station):
                         if (current_datetime - previous_datetime) > 2.5 * median_timedelta:
                             data['values'].append({ 'x' : [], 'y' : [] })
                     else:
-                        data = { 'values' : [ { 'x' : [], 'y' : [] } ] }
+                        data = { 'values' : [ { 'x' : [], 'y' : [] } ], 'constant' : True }
                         graphs_data[key] = data
 
                     data['values'][-1]['x'].append(batch['datetime'])
@@ -123,6 +128,9 @@ def get_component_data(station):
                             data['class_ids'].append(data['class_ids'][-1] + 1)
                             data['classes'].append(value)
                         data['values'][-1]['y'].append(data['class_ids'][data['classes'].index(value)])
+                        if len(data['values'][-1]['y']) >= 2 and \
+                        (data['values'][-1]['y'][-1] != data['values'][-1]['y'][-2]):
+                            data['constant'] = False
                     else:
                         if 'unit' in data:
                             previous_unit = data['unit']
@@ -147,9 +155,24 @@ def get_component_data(station):
                                 data['classes'].append(value)
                             data['values'][-1]['y'].append(data['class_ids'][data['classes'].index(value)])
                             if 'unit' in data: del data['unit']
+                            if len(data['values'][-1]['y']) >= 2 and \
+                            (data['values'][-1]['y'][-1] != data['values'][-1]['y'][-2]):
+                                data['constant'] = False
                         else:
                             data['values'][-1]['y'].append(num)
                             data['unit'] = unit
+                            if len(data['values'][-1]['y']) >= 2 and \
+                            (data['values'][-1]['y'][-1] != data['values'][-1]['y'][-2]):
+                                data['constant'] = False
+
+            constant_keys = []
+            for key in graphs_data:
+                if graphs_data[key]['constant']:
+                    constant_keys.append(key)
+
+            for key in constant_keys:
+                del graphs_data[key]
+                current_values_data[key] += " (constant)"
 
             component['current_values'] = list(current_values_data.items())
 
@@ -219,19 +242,28 @@ def registration_resolve(network_id, approve):
 def notify_maintainers(station):
     emails = []
     for maintainer in station.maintainers:
-        emails.append(maintainer.email)
+        try:
+            validate_email(maintainer.email)
+            emails.append(maintainer.email)
+        except validate_email.ValidationError:
+            pass
 
+    subject = '[' + settings.SITE_NAME + '] Station notification'
+    message = station.name + ' status changed to ' + station.status.name + '!'
+
+    '''
     mail.send_mail(
-        'Petnica Meteor Network: Station notification',
-        'Test Message.',
-        'from@example.com',
+        subject,
+        message,
+        NOTIFICATION_EMAIL,
         emails,
         fail_silently=False,
     )
+    '''
 
 def update_status(station):
     previous_status = station.status
-    if (timezone.now() - station.last_updated).total_seconds() // 3600 > 72:
+    if (timezone.now() - station.last_updated).total_seconds() // 3600 > DISCONNECTED_HOURS:
         status = Status.objects.get(name="Disconnected")
     elif len(get_errors(station)) > 0:
         status = Status.objects.get(name="Error(s) occured")
@@ -242,7 +274,7 @@ def update_status(station):
 
         if len(rules_broken) > 0:
             status = Status.objects.get(name="Rule(s) broken")
-        elif (timezone.now() - station.last_updated).total_seconds() // 3600 > 6:
+        elif (timezone.now() - station.last_updated).total_seconds() // 3600 > NOT_CONNECTING_HOURS:
             status = Status.objects.get(name="Not connecting")
         else:
             status = Status.objects.all().first()
