@@ -1,4 +1,4 @@
-.card {
+.maintainer-card {
     height: 200px;
 }
 
@@ -47,6 +47,7 @@
     margin: auto;
     color: white;
     border: none;
+    border-radius: 5px;
     outline: none;
     -webkit-box-shadow: none;
     -moz-box-shadow: none;
@@ -57,4 +58,49 @@
 .btn-notes-update {
     width: 100px;
     margin: auto;
+}
+
+.btn-rule-delete, .btn-rule-delete:hover {
+    width: 120px;
+    margin: auto;
+    background-color: red;
+}
+
+.btn-rule-add {
+    width: 100px;
+    margin: auto;
+}
+
+.rules-empty {
+    font-size: 18px;
+    text-align: center;
+    width: 100%;
+}
+
+.rule {
+    text-align: center;
+}
+
+.expression-syntax {
+    width: 100%;
+    text-align: center;
+}
+
+.rule-input-label {
+    width: 100%;
+    text-align: center;
+}
+
+.rule-input, .rule-input:focus {
+    width: 70%;
+    margin: auto;
+    padding: 4px;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    outline: none;
+    -webkit-box-shadow: none;
+    -moz-box-shadow: none;
+    box-shadow: none;
+    background-color: rgba(255, 255, 255, 0.15);
 }

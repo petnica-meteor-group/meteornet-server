@@ -1,8 +1,9 @@
 #!/bin/bash
 
 PROJECT_DIR="$( cd "$(dirname "$0")" ; pwd -P )"
-MAIN_APP=meteor_network_server
+MAIN_APP=meteornet_server
 DOMAIN_NAME=meteori.petnica.rs
+SITE_NAME="Petnica Meteor Network"
 
 STATIC_DIR=/srv/http/$MAIN_APP/static
 MEDIA_DIR=/srv/http/$MAIN_APP/media
@@ -32,6 +33,7 @@ for template in ${templates[@]}; do
             | sed "s~<project_dir>~$PROJECT_DIR~g" \
             | sed "s~<main_app>~$MAIN_APP~g" \
             | sed "s~<domain_name>~$DOMAIN_NAME~g" \
+            | sed "s~<site_name>~$SITE_NAME~g" \
             | sed "s~<static_dir>~$STATIC_DIR~g" \
             | sed "s~<media_dir>~$MEDIA_DIR~g" \
             | sed "s~<socket_path>~$SOCKET_PATH~g" \

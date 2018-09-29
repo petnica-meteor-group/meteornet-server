@@ -48,6 +48,8 @@
         ϕ: {{ station.latitude|floatformat:4 }}, λ: {{ station.longitude|floatformat:4 }}, Height: {{ station.height|floatformat:2 }}m
     </div>
 </div>
+<div class="status">Status: <span style="color: {{ station.status.color }};">{{ station.status.name }}</span></div>
+<br/>
 <div class="comment">{{ station.comment }}</div>
 <br/>
 <button class="btn btn-block btn-show-map" data-toggle="collapse" data-target="#show-map" onclick="openMap()">Show On Map</button>
@@ -67,7 +69,7 @@
         {{ error.message|linebreaks|nbsp }}
         <form method="post" action="/station_error_resolve">
             {% csrf_token %}
-            <input type="hidden" name="error_id" value="{{ error.id }}" />
+            <input type="hidden" name="id" value="{{ error.id }}" />
             <button type="submit" class="btn btn-block btn-resolve">Resolve</button>
         </form>
     </dd>
@@ -95,9 +97,9 @@
 {% endfor %}
 <br/>
 {% endif %}
-{% if components|length > 0 %}
+{% if component_data|length > 0 %}
 <div class="subtitle">Components</div>
-{% for component in components %}
+{% for component in component_data %}
 <div class="row">
     <div class="col-12">
         <div class="card card-component">
@@ -115,15 +117,16 @@
                 </div>
                 {% endfor %}
                 <br/>
-                <button class="btn btn-block btn-show-plots" data-toggle="collapse" data-target="#show-plots-{{ component.name }}">Show Plots</button>
-                <div id="show-plots-{{ component.name }}" class="collapse">
+                {% if component.graphs_rows|length > 0 %}
+                <button class="btn btn-block btn-show-graphs" data-toggle="collapse" data-target="#show-graphs-{{ component.name }}">Show Graphs</button>
+                <div id="show-graphs-{{ component.name }}" class="collapse">
                     <br/>
-                    {% for row in component.plot_rows %}
+                    {% for row in component.graphs_rows %}
                     <div class="row">
                         <div class="col-{{ row.sidecol_size }}"></div>
-                        {% for plot in row.plots %}
+                        {% for graph in row.graphs %}
                         <div class="col-{{ row.col_size }}">
-                            <img class="plot" src="/station_graph/{{ plot }}"></img>
+                            <img class="graph" src="/station_graph/{{ graph }}"></img>
                         </div>
                         {% endfor %}
                         <div class="col-{{ row.sidecol_size }}"></div>
@@ -131,6 +134,7 @@
                     <br/>
                     {% endfor %}
                 </div>
+                {% endif %}
             </div>
         </div>
     </div>

@@ -3,26 +3,19 @@ from django.core.exceptions import PermissionDenied
 from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
-from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import render, redirect
 from django.utils import timezone
 from django.contrib.auth import authenticate, login as django_login, logout as django_logout
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from wsgiref.util import FileWrapper
 
-from datetime import datetime, timedelta
 from os import path
+import PIL
 import json
 import math
-import matplotlib
-matplotlib.use('WebAgg')
-import matplotlib.pyplot as plt
-import matplotlib.ticker as mticker
-import PIL
-import random
 
 from .models import *
-from .stations.models import *
 from .stations import stations
 
 RESPONSE_SUCCESS = "success"
@@ -30,13 +23,12 @@ RESPONSE_FAILURE = "failure"
 STATIONS_PER_ROW = 4
 MAINTAINERS_PER_ROW = 3
 COMPONENT_CURRENT_VALUES_PER_ROW = 8
-RECENT_BATCH_WINDOW_HOURS = 3
-COMPONENT_PLOTS_PER_ROW = 1
+COMPONENT_GRAPHS_PER_ROW = 1
 
 @require_http_methods(["POST"])
 def login(request):
-    username = request.POST['username']
-    password = request.POST['password']
+    username = request.POST.get('username', '')
+    password = request.POST.get('password', '')
     user = authenticate(request, username=username, password=password)
     if user is not None:
         django_login(request, user)
@@ -78,9 +70,8 @@ def index(request):
     center = { 'longitude' : 0, 'latitude' : 0 }
     zoom_level = 1
 
-    if stations.get_current_list().count() > 0:
-        station_list = stations.get_current_list()
-
+    station_list = stations.get_current_list()
+    if len(station_list) > 0:
         count = 0
         for station in station_list:
             station_coordinates.append({ 'longitude' : station.longitude, 'latitude' : station.latitude })
@@ -186,7 +177,13 @@ def administration(request):
     else:
         notes = AdministrationNotes.objects.all().first()
 
-    context = { 'registration_requests_rows' : registration_requests_rows, 'notes' : notes.content, 'settings' : settings }
+    rules = stations.get_rules()
+
+    context = {
+        'registration_requests_rows' : registration_requests_rows,
+        'notes' : notes.content,
+        'rules' : rules,
+        'settings' : settings }
     return render(request, 'administration.html', context)
 
 @require_http_methods(["POST"])
@@ -195,16 +192,15 @@ def administration_notes_update(request):
     notes = AdministrationNotes.objects.all().first()
     notes.content = request.POST.get('notes', '')
     notes.save()
-    return redirect('/administration')
+    return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
 @require_http_methods(["GET"])
 @login_required
 def station_view(request, network_id):
-    station = get_object_or_404(Station, network_id=network_id)
-    measurements = stations.get_recent_measurements(station)
+    station = stations.get(network_id)
     errors = stations.get_errors(station)
+    maintainers = stations.get_maintainers(station)
 
-    maintainers = list(station.maintainers.all().values())
     maintainer_rows = []
     for i in range(0, len(maintainers), MAINTAINERS_PER_ROW):
         row = {}
@@ -216,9 +212,9 @@ def station_view(request, network_id):
             maintainer = maintainers[i + j]
 
             maintainer_card = {}
-            maintainer_card['name'] = maintainer['name']
-            maintainer_card['phone'] = maintainer['phone']
-            maintainer_card['email'] = maintainer['email']
+            maintainer_card['name'] = maintainer.name
+            maintainer_card['phone'] = maintainer.phone
+            maintainer_card['email'] = maintainer.email
 
             maintainer_cards.append(maintainer_card)
 
@@ -228,119 +224,10 @@ def station_view(request, network_id):
 
         maintainer_rows.append(row)
 
-    components = []
-    for component_measurement in measurements:
-        component = {}
-        component['name'] = component_measurement['component']
+    component_data = stations.get_component_data(station)
 
-        timedeltas = []
-        for i in range(1, len(component_measurement['batches'])):
-            timedeltas.append(component_measurement['batches'][i    ]['datetime'] -
-                              component_measurement['batches'][i - 1]['datetime'])
-        timedeltas = sorted(timedeltas)
-        if len(timedeltas) == 0:
-            median_timedelta = timedelta(0)
-        else:
-            median_timedelta = timedeltas[len(timedeltas) // 2]
-        current_datetime = timezone.now()
-
-        def extract_num_unit(string_value):
-            string_value = str(string_value)
-            num = float('NaN')
-            cutout = len(string_value)
-            for i in range(1, len(string_value) + 1):
-                try:
-                    num = float(string_value[:i])
-                except ValueError:
-                    cutout = i - 1
-                    break
-            return num, string_value[cutout:]
-
-        current_values_data = {}
-        plot_data = {}
-        for batch in component_measurement['batches']:
-            recent_batch = (current_datetime - batch['datetime']).total_seconds() // 3600 < RECENT_BATCH_WINDOW_HOURS
-
-            for measurement in batch['measurements']:
-                key = measurement['key']
-                value = measurement['value']
-                if recent_batch:
-                    num, unit = extract_num_unit(value)
-                    if math.isnan(num):
-                        current_values_data[key] = value
-                    else:
-                        current_values_data[key] = "{:8.2f}".format(num) + unit
-
-                if key in plot_data:
-                    data = plot_data[key]
-                    previous_datetime = data['values'][-1]['x'][-1]
-                    current_datetime = batch['datetime']
-                    if (current_datetime - previous_datetime) > 2.5 * median_timedelta:
-                        data['values'].append({ 'x' : [], 'y' : [] })
-                else:
-                    data = { 'values' : [ { 'x' : [], 'y' : [] } ] }
-                    plot_data[key] = data
-
-                data['values'][-1]['x'].append(batch['datetime'])
-                if 'classes' in data:
-                    if not (value in data['classes']):
-                        data['class_ids'].append(data['class_ids'][-1] + 1)
-                        data['classes'].append(value)
-                    data['values'][-1]['y'].append(data['class_ids'][data['classes'].index(value)])
-                else:
-                    if 'unit' in data:
-                        previous_unit = data['unit']
-                    else:
-                        previous_unit = None
-                    num, unit = extract_num_unit(value)
-                    num = round(num, 2)
-                    if (previous_unit != None and unit != previous_unit) or math.isnan(num):
-                        data['class_ids'] = []
-                        data['classes'] = []
-                        for i in range(len(data['values'])):
-                            for j in range(len(data['values'][i]['y'])):
-                                y = str(data['values'][i]['y'][j]) + data['unit']
-                                if not (y in data['classes']):
-                                    new_id = data['class_ids'][-1] + 1 if len(data['class_ids']) > 0 else 1
-                                    data['class_ids'].append(new_id)
-                                    data['classes'].append(y)
-                                data['values'][i]['y'][j] = data['class_ids'][data['classes'].index(y)]
-                        if not (value in data['classes']):
-                            new_id = data['class_ids'][-1] + 1 if len(data['class_ids']) > 0 else 1
-                            data['class_ids'].append(new_id)
-                            data['classes'].append(value)
-                        data['values'][-1]['y'].append(data['class_ids'][data['classes'].index(value)])
-                        if 'unit' in data: del data['unit']
-                    else:
-                        data['values'][-1]['y'].append(num)
-                        data['unit'] = unit
-
-        current_values = []
-        for key in current_values_data:
-            current_values.append((key, current_values_data[key]))
-
-        plots = []
-        for key in plot_data:
-            plot = (station.network_id + component['name'] + key).replace(' ', '_') + '.png'
-            data = plot_data[key]
-            color = [ random.uniform(0, 1), random.uniform(0, 1), random.uniform(0, 1) ]
-            plt.figure(figsize=(12, 5))
-            if 'classes' in data:
-                plt.yticks(data['class_ids'], data['classes'], size='x-large')
-            else:
-                ax = plt.gca()
-                ax.yaxis.set_major_formatter(mticker.ScalarFormatter())
-                ax.yaxis.get_major_formatter().set_useOffset(False)
-            if 'unit' in data: plt.ylabel(data['unit'], rotation='horizontal', size='x-large', labelpad=25)
-            plt.title(key, size='xx-large')
-            plt.tick_params(axis='x', which='major', labelsize='large')
-            plt.tick_params(axis='y', which='major', labelsize='x-large')
-            for xy in data['values']:
-                plt.plot(xy['x'], xy['y'], color=color)
-            plt.savefig(path.join('/tmp', plot))
-            plt.close()
-            plots.append(plot)
-
+    for component in component_data:
+        current_values = component['current_values']
         component['current_values_rows'] = []
         for i in range(0, len(current_values), COMPONENT_CURRENT_VALUES_PER_ROW):
             row = ''
@@ -351,26 +238,25 @@ def station_view(request, network_id):
             row = row[:-len(", ")]
             component['current_values_rows'].append(row)
 
-        component['plot_rows'] = []
-        for i in range(0, len(plots), COMPONENT_PLOTS_PER_ROW):
+        graphs = component['graphs']
+        component['graphs_rows'] = []
+        for i in range(0, len(graphs), COMPONENT_GRAPHS_PER_ROW):
             row = {}
-            row_plots = []
-            for j in range(COMPONENT_PLOTS_PER_ROW):
-                if i + j >= len(plots): break
-                row_plots.append(plots[i + j])
+            row_graphs = []
+            for j in range(COMPONENT_GRAPHS_PER_ROW):
+                if i + j >= len(graphs): break
+                row_graphs.append(graphs[i + j])
 
-            row['plots'] = row_plots
-            row['col_size'] = 12 // COMPONENT_PLOTS_PER_ROW
-            row['sidecol_size'] = (12 - len(row_plots) * row['col_size']) // 2
+            row['graphs'] = row_graphs
+            row['col_size'] = 12 // COMPONENT_GRAPHS_PER_ROW
+            row['sidecol_size'] = (12 - len(row_graphs) * row['col_size']) // 2
 
-            component['plot_rows'].append(row)
-
-        components.append(component)
+            component['graphs_rows'].append(row)
 
     context = {
         'station' : station,
         'maintainer_rows' : maintainer_rows,
-        'components' : components,
+        'component_data' : component_data,
         'errors' : errors,
         'settings' : settings
     }
@@ -388,7 +274,7 @@ def station_register(request):
 @login_required
 def station_registration_resolve(request):
     stations.registration_resolve(request.POST.get('network_id', ''), request.POST.get('approve', None) == 'True')
-    return redirect('/administration')
+    return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
 @require_http_methods(["POST"])
 @csrf_exempt
@@ -409,7 +295,7 @@ def station_version(request):
 @require_http_methods(["GET", "POST"])
 @csrf_exempt
 def station_code_download(request):
-    filepath = stations.get_update_filepath()
+    filepath = stations.get_code_filepath()
     with open(filepath, 'rb') as zipfile:
         wrapper = FileWrapper(zipfile)
         response = HttpResponse(wrapper, content_type='application/zip')
@@ -420,7 +306,7 @@ def station_code_download(request):
 @require_http_methods(["POST"])
 @login_required
 def station_error_resolve(request):
-    stations.error_resolve(request.POST.get('error_id', ''))
+    stations.error_resolve(request.POST.get('id', ''))
     return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
 @require_http_methods(["POST"])
@@ -435,6 +321,24 @@ def station_delete(request):
 @login_required
 def station_graph(request, graph):
     response = HttpResponse(content_type='image/png')
-    graph = PIL.Image.open(path.join('/tmp', graph))
+    graph = PIL.Image.open(stations.get_graph_path(graph))
     graph.save(response, 'PNG')
     return response
+
+@require_http_methods(["POST"])
+@login_required
+def rule_delete(request):
+    if stations.rule_delete(int(request.POST.get('id', '-1'))):
+        messages.add_message(request, messages.SUCCESS, "Rule deleted")
+    return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
+@require_http_methods(["POST"])
+@login_required
+def rule_add(request):
+    expression = request.POST.get('expression', '')
+    message = request.POST.get('message', '')
+    if stations.rule_add(expression, message):
+        messages.add_message(request, messages.SUCCESS, "Rule added")
+    else:
+        messages.add_message(request, messages.ERROR, "Invalid rule")
+    return HttpResponseRedirect(request.META.get('HTTP_REFERER'))

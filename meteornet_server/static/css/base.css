@@ -16,12 +16,6 @@ a:link, a:visited, a:hover, a:active {
     outline: 0;
 }
 
-.messages {
-    font-size: 12px;
-    color: yellow;
-    margin-top: 4px;
-}
-
 .btn, .btn:hover {
     -moz-transition: none;
     -webkit-transition: none;
@@ -116,4 +110,53 @@ a:link, a:visited, a:hover, a:active {
     margin: 20px 0px 10px 0px;
     font-size: 12px;
     padding: 16px;
+}
+
+#messages {
+    visibility: hidden;
+    min-width: 250px;
+    margin-left: -125px;
+    background-color: white;
+    color: black;
+    border-radius: 5px;
+    padding: 10px;
+    position: fixed;
+    z-index: 1;
+    left: 50%;
+    top: 30px;
+}
+
+#messages.show {
+    visibility: visible;
+   -webkit-animation: fadein 0.5s, fadeout 0.5s 2.5s;
+   animation: fadein 0.5s, fadeout 0.5s 2.5s;
+}
+
+@-webkit-keyframes fadein {
+    from {top: 0; opacity: 0;}
+    to {top: 30px; opacity: 1;}
+}
+
+@keyframes fadein {
+    from {top: 0; opacity: 0;}
+    to {top: 30px; opacity: 1;}
+}
+
+@-webkit-keyframes fadeout {
+    from {top: 30px; opacity: 1;}
+    to {top: 0; opacity: 0;}
+}
+
+@keyframes fadeout {
+    from {top: 30px; opacity: 1;}
+    to {top: 0; opacity: 0;}
+}
+
+.messages-list {
+    text-align: center;
+    margin-bottom: 0px;
+}
+
+.message {
+    padding-right: 25px;
 }

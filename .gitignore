@@ -1,8 +1,8 @@
-meteor_network_server/nginx.conf
-meteor_network_server/settings.py
-meteor_network_server/uwsgi.ini
-meteor_network_server/secret_key
-meteor_network_server/db_password
+nginx.conf
+settings.py
+uwsgi.ini
+secret_key
+db_password
 
 system.log*
 

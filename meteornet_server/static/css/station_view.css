@@ -34,10 +34,6 @@
     margin: auto;
 }
 
-.btn-delete {
-    width: 100px;
-}
-
 .btn-no, .btn-no:hover {
     width: 100px;
     background-color: rgba(150, 150, 150, 1);
@@ -48,7 +44,7 @@
     margin: auto;
 }
 
-.btn-show-plots {
+.btn-show-graphs {
     width: 120px;
     margin: auto;
 }
@@ -73,6 +69,12 @@
     font-size: 14px;
     text-align: center;
     width: 100%;
+}
+
+.status {
+    width: 100%;
+    text-align: center;
+    font-size: 16px;
 }
 
 .comment {
@@ -110,6 +112,6 @@
     margin: auto;
 }
 
-.plot {
+.graph {
     width: 90%;
 }
