@@ -21,8 +21,8 @@ NGINX_USER=www-data
 
 DB_NAME=mndb
 
-templates=("nginx_template.conf" "uwsgi_template.ini" "settings_template.py")
-configs=("nginx.conf" "uwsgi.ini" "settings.py")
+templates=("nginx_template.conf" "uwsgi_template.ini" "settings_template.py" "wsgi_template.py")
+configs=("nginx.conf" "uwsgi.ini" "settings.py" "wsgi.py")
 counter=0
 for template in ${templates[@]}; do
     config=${configs[$counter]}

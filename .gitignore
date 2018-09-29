@@ -1,6 +1,7 @@
 nginx.conf
 settings.py
 uwsgi.ini
+wsgi.py
 secret_key
 db_password
 
