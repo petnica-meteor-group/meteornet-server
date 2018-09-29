@@ -328,7 +328,8 @@ def station_graph(request, graph):
 @require_http_methods(["POST"])
 @login_required
 def rule_delete(request):
-    stations.rule_delete(int(request.POST.get('id', '-1')))
+    if stations.rule_delete(int(request.POST.get('id', '-1'))):
+        messages.add_message(request, messages.SUCCESS, "Rule deleted")
     return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
 @require_http_methods(["POST"])
@@ -336,5 +337,8 @@ def rule_delete(request):
 def rule_add(request):
     expression = request.POST.get('expression', '')
     message = request.POST.get('message', '')
-    stations.rule_add(expression, message)
+    if stations.rule_add(expression, message):
+        messages.add_message(request, messages.SUCCESS, "Rule added")
+    else:
+        messages.add_message(request, messages.ERROR, "Invalid rule")
     return HttpResponseRedirect(request.META.get('HTTP_REFERER'))

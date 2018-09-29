@@ -18,6 +18,7 @@ matplotlib.use('WebAgg')
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mticker
 import random
+import ast
 
 from .models import *
 
@@ -478,10 +479,21 @@ def rule_delete(id):
     return False
 
 def rule_add(expression, message):
+    try:
+        if len(expression) > 256: return False
+        if len(message) > 128: return False
+
+        tree = ast.parse(expression)
+        print(ast.dump(tree))
+    except Exception:
+        return False
+
     rule = StatusRule()
     rule.expression = expression
     rule.message = message
     rule.save()
+
+    return True
 
 def get_rules():
     return StatusRule.objects.all()

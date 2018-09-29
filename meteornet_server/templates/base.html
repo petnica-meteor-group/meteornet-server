@@ -69,6 +69,16 @@
 
     <div class="container-fluid">
 
+        {% if messages %}
+        <div id="messages">
+            <ul class="messages-list">
+            {% for message in messages %}
+                <li {% if message.tags %} class="{{ message.tags }} message"{% endif %}>{{ message }}</li>
+            {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
         <div class="row">
             <div class="col-2"></div>
             <div class="col-8 header">
@@ -110,13 +120,6 @@
                                 </form>
                             </div>
                         </div>
-                    {% endif %}
-                    {% if messages %}
-                        <ul class="messages" align="center">
-                        {% for message in messages %}
-                            <li {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
-                        {% endfor %}
-                        </ul>
                     {% endif %}
                     </div>
                 </div>
@@ -160,6 +163,12 @@
         </div>
 
     </div>
+
+    <script>
+        var messages = document.getElementById("messages");
+        messages.className = "show";
+        setTimeout(function(){ messages.className = messages.className.replace("show", ""); }, 3000);
+    </script>
 
     {% block scripts %}
     {% endblock %}
