@@ -177,7 +177,13 @@ def administration(request):
     else:
         notes = AdministrationNotes.objects.all().first()
 
-    context = { 'registration_requests_rows' : registration_requests_rows, 'notes' : notes.content, 'settings' : settings }
+    rules = stations.get_rules()
+
+    context = {
+        'registration_requests_rows' : registration_requests_rows,
+        'notes' : notes.content,
+        'rules' : rules,
+        'settings' : settings }
     return render(request, 'administration.html', context)
 
 @require_http_methods(["POST"])
@@ -300,7 +306,7 @@ def station_code_download(request):
 @require_http_methods(["POST"])
 @login_required
 def station_error_resolve(request):
-    stations.error_resolve(request.POST.get('error_id', ''))
+    stations.error_resolve(request.POST.get('id', ''))
     return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
 @require_http_methods(["POST"])
@@ -318,3 +324,17 @@ def station_graph(request, graph):
     graph = PIL.Image.open(stations.get_graph_path(graph))
     graph.save(response, 'PNG')
     return response
+
+@require_http_methods(["POST"])
+@login_required
+def rule_delete(request):
+    stations.rule_delete(int(request.POST.get('id', '-1')))
+    return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
+@require_http_methods(["POST"])
+@login_required
+def rule_add(request):
+    expression = request.POST.get('expression', '')
+    message = request.POST.get('message', '')
+    stations.rule_add(expression, message)
+    return HttpResponseRedirect(request.META.get('HTTP_REFERER'))

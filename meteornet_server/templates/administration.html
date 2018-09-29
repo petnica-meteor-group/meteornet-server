@@ -14,7 +14,7 @@
 <div class="row">
     {% for station_card in row.station_cards %}
     <div class="col-{{ row.col_size }}">
-        <div class="card">
+        <div class="maintainer-card">
             <div class="card-header">
                 <div class="station-name">{{ station_card.name }}</div>
                 <div class="station-location">
@@ -40,6 +40,7 @@
     {% endfor %}
 </div>
 {% endfor %}
+<hr/>
 {% endif %}
 <div class="subtitle">Notes</div>
 <form method="post" action="/administration_notes_update">
@@ -49,6 +50,61 @@
     </div>
     <div class="form-group">
         <button type="submit" class="btn btn-block btn-notes-update">Update</button>
+    </div>
+</form>
+<hr/>
+<div class="subtitle">Rules</div>
+{% if rules|length > 0 %}
+    {% for rule in rules %}
+    <div class="row">
+        <div class="col-3"></div>
+        <div class="col-6 rule card">
+            <div class="rule-expression">{{ rule.expression }}</div>
+            <div class="rule-message">{{ rule.message }}</div>
+        </div>
+        <div class="col-2">
+            <form method="post" action="/rule_delete">
+                {% csrf_token %}
+                <input type="hidden" name="id" value="{{ rule.id }}" />
+                <button type="submit" class="btn btn-block btn-rule-delete">Delete Rule</button>
+            </form>
+        </div>
+        <div class="col-1"></div>
+    </div>
+    <br/>
+    {% endfor %}
+{% else %}
+<div class="rules-empty">
+/
+</div>
+{% endif %}
+<br/>
+<div class="expression-syntax">
+    Expression syntax:
+    <ul>
+        <li>Write variables as ${component.variable}.</li>
+        <li>Names may contain * for wildcard parts.</li>
+        <li>Replace spaces in names with underscores.</li>
+        <li>Names and values are case insensitive.</li>
+        <li>Available tokens: +, -, *, /, (, ), and, or.</li>
+    </ul>
+    e.g.:<br/>
+    Expression: ${camera_controller*.psu} == 'on'<br/>
+    Message when broken: Power supply is off!
+</div>
+<br/>
+<form method="post" action="/rule_add">
+    {% csrf_token %}
+    <div class="form-group">
+        <label for="expression" class="rule-input-label">Expression:</label>
+        <input type="text" class="form-control rule-input" id="expression" name="expression">
+    </div>
+    <div class="form-group">
+        <label for="expression" class="rule-input-label">Message when broken:</label>
+        <input type="text" class="form-control rule-input" id="message" name="message">
+    </div>
+    <div class="form-group">
+        <button type="submit" class="btn btn-block btn-rule-add">Add Rule</button>
     </div>
 </form>
 {% endblock %}

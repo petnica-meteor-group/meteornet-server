@@ -30,7 +30,7 @@ def init_statuses():
 
 def get_status_rule_broken():
     init_statuses()
-    return Status.objects.get(name="Rule broken").id
+    return Status.objects.get(name="Rule(s) broken").id
 
 def get_status_default():
     init_statuses()

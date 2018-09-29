@@ -450,9 +450,9 @@ def get_version():
 def get_code_filepath():
     return path.join(path.dirname(__file__), 'station_code.zip')
 
-def error_resolve(error_id):
+def error_resolve(id):
     try:
-        Error.objects.get(id=error_id).delete()
+        Error.objects.get(id=id).delete()
         return True
     except Exception:
         pass
@@ -468,3 +468,20 @@ def delete(network_id):
 
 def get_graph_path(graph):
     return path.join('/tmp', graph)
+
+def rule_delete(id):
+    try:
+        StatusRule.objects.get(id=id).delete()
+        return True
+    except Exception:
+        pass
+    return False
+
+def rule_add(expression, message):
+    rule = StatusRule()
+    rule.expression = expression
+    rule.message = message
+    rule.save()
+
+def get_rules():
+    return StatusRule.objects.all()
