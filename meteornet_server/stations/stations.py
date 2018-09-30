@@ -1,7 +1,7 @@
 from django.utils import timezone
 from django.core.exceptions import ObjectDoesNotExist
 from django.utils import timezone
-from django.utils.timezone import make_aware
+from django.utils.timezone import make_aware, localtime
 from django.db import transaction, connection
 from django.shortcuts import get_object_or_404
 from django.core import mail
@@ -70,7 +70,7 @@ def get_component_data(station):
             for measurement_batch_object in MeasurementBatch.objects.filter(
             component=component_object.id,
             datetime__gt=(timezone.now() - timedelta(days=RECENT_MEASUREMENTS_DAYS))).order_by('datetime'):
-                batch = { 'datetime' : measurement_batch_object.datetime, 'measurements' : [] }
+                batch = { 'datetime' : localtime(measurement_batch_object.datetime), 'measurements' : [] }
                 for measurement_object in Measurement.objects.filter(batch=measurement_batch_object.id):
                     batch['measurements'].append({ 'key' : measurement_object.key, 'value' : measurement_object.value })
                 batches.append(batch)
@@ -84,7 +84,7 @@ def get_component_data(station):
                 median_timedelta = timedelta(0)
             else:
                 median_timedelta = timedeltas[len(timedeltas) // 2]
-            current_datetime = timezone.now()
+            current_datetime = localtime(timezone.now())
 
             def extract_num_unit(string_value):
                 string_value = str(string_value)
