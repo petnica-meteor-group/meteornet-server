@@ -19,6 +19,7 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as mticker
 import random
 import ast
+import re
 
 from .models import *
 
@@ -483,8 +484,18 @@ def rule_add(expression, message):
         if len(expression) > 256: return False
         if len(message) > 128: return False
 
-        tree = ast.parse(expression)
-        print(ast.dump(tree))
+        expression_prepared = list(expression)
+        variable_regex = re.compile('\$\{[^}]*\}')
+        variable_count = 0
+        offset = 0
+        for match in variable_regex.finditer(expression):
+            expression_prepared[match.start() - offset : match.end() - offset] = 'x'
+            variable_count += 1
+            offset += match.end() - match.start() - 1
+        if variable_count == 0: return False
+        expression_prepared = ''.join(expression_prepared)
+
+        tree = ast.parse(expression_prepared)
     except Exception:
         return False
 

@@ -90,7 +90,7 @@
     </ul>
     e.g.:<br/>
     Expression: ${camera_controller*.psu} == 'on'<br/>
-    Message when broken: Power supply is off!
+    Rule break message: Power supply is off!
 </div>
 <br/>
 <form method="post" action="/rule_add">
@@ -100,11 +100,11 @@
         <input type="text" class="form-control rule-input" id="expression" name="expression">
     </div>
     <div class="form-group">
-        <label for="expression" class="rule-input-label">Message when broken:</label>
+        <label for="expression" class="rule-input-label">Rule break message:</label>
         <input type="text" class="form-control rule-input" id="message" name="message">
     </div>
     <div class="form-group">
-        <button type="submit" class="btn btn-block btn-rule-add" disabled>Add Rule</button>
+        <button type="submit" class="btn btn-block btn-rule-add">Add Rule</button>
     </div>
 </form>
 {% endblock %}
