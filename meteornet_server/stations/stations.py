@@ -265,6 +265,25 @@ def notify_maintainers(station, rules_broken):
     )
     '''
 
+def check_rule(station, rule):
+    return
+
+    try:
+        expression_prepared = list(expression)
+        variable_regex = re.compile('\$\{[^}]*\}')
+        offset = 0
+        for match in variable_regex.finditer(expression):
+            expression_prepared[match.start() - offset : match.end() - offset] = 'x'
+            variable_count += 1
+            offset += match.end() - match.start() - 1
+        expression_prepared = ''.join(expression_prepared)
+
+        tree = ast.parse(expression_prepared)
+    except Exception:
+        return False
+
+    return True
+
 def update_status(station):
     previous_status = station.status
     rules_broken = []
@@ -274,7 +293,8 @@ def update_status(station):
         status = Status.objects.get(name="Error(s) occured")
     else:
         for rule in StatusRule.objects.all():
-            pass
+            if not check_rule(station, rule):
+                rules_broken.append(rule)
 
         if len(rules_broken) > 0:
             status = Status.objects.get(name="Rule(s) broken")
@@ -496,6 +516,11 @@ def rule_add(expression, message):
         expression_prepared = ''.join(expression_prepared)
 
         tree = ast.parse(expression_prepared)
+        if not isinstance(tree.body[0], ast.Expr) or \
+        (not isinstance(tree.body[0].value, ast.BoolOp) and not isinstance(tree.body[0].value, ast.Compare)):
+            return False
+
+        #allowed_nodes = [ ast.Expr,  ]
     except Exception:
         return False
 
