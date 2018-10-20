@@ -272,17 +272,17 @@ def check_rule(station, rule):
     variable_regex = re.compile('\$\{([^}]*)\.([^}]*)\}')
     offset = 0
     for match in variable_regex.finditer(expression):
-        component_name = match.group(1)
-        member_name = match.group(2)
+        component_regex = re.compile('^' + match.group(1).lower().replace(' ', '_').replace('*', '.*') + '$')
+        member_regex = re.compile('^' + match.group(2).lower().replace(' ', '_').replace('*', '.*') + '$')
 
         value = None
         for component in Component.objects.filter(station=station.id):
-            if component.name.lower().replace(' ', '_') == component_name.lower().replace(' ', '_'):
+            if component_regex.fullmatch(component.name.lower().replace(' ', '_')) != None:
                 for measurement_batch in MeasurementBatch.objects.filter(
                 component=component.id,
                 datetime__gt=(timezone.now() - timedelta(days=RECENT_MEASUREMENTS_DAYS))).order_by('datetime').reverse():
                     for measurement in Measurement.objects.filter(batch=measurement_batch.id):
-                        if measurement.key.lower().replace(' ', '_') == member_name.lower().replace(' ', '_'):
+                        if member_regex.fullmatch(measurement.key.lower().replace(' ', '_')) != None:
                             value, _ = extract_num_unit(measurement.value)
                             break
         if value == None:
