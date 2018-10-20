@@ -75,6 +75,16 @@
     </dd>
 {% endfor %}
 </dl>
+<hr/>
+{% endif %}
+{% if rules_broken|length > 0 %}
+<div class="subtitle">Rules Broken</div>
+<ul>
+{% for rule in rules_broken %}
+    <li class="rule">{{ rule.message }}</li>
+{% endfor %}
+</ul>
+<hr/>
 {% endif %}
 {% if maintainer_rows|length > 0 %}
 <div class="subtitle">Maintainers</div>
@@ -96,6 +106,7 @@
 </div>
 {% endfor %}
 <br/>
+<hr/>
 {% endif %}
 {% if component_data|length > 0 %}
 <div class="subtitle">Components</div>

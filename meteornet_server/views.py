@@ -253,11 +253,14 @@ def station_view(request, network_id):
 
             component['graphs_rows'].append(row)
 
+    rules_broken = stations.get_rules_broken(station)
+
     context = {
         'station' : station,
         'maintainer_rows' : maintainer_rows,
         'component_data' : component_data,
         'errors' : errors,
+        'rules_broken' : rules_broken,
         'settings' : settings
     }
     return render(request, 'station_view.html', context)

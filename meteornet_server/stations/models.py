@@ -19,7 +19,7 @@ def init_statuses():
                 ("Not connecting", '#FFFF19'),
                 ("Rule(s) broken", '#FFA500'),
                 ("Error(s) occured", '#CC0000'),
-                ("Disconnected", '#000000'),
+                ("Disconnected", '#990000'),
         ]
         for i, d in enumerate(data):
             status = Status()

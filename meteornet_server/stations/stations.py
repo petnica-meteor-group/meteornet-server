@@ -7,6 +7,7 @@ from django.shortcuts import get_object_or_404
 from django.core import mail
 from django.core.validators import validate_email
 from django.conf import settings
+from django.core.exceptions import ValidationError
 
 from datetime import timedelta, datetime
 from os import path
@@ -58,6 +59,18 @@ def get_errors(station):
 def get_maintainers(station):
     return station.maintainers.all()
 
+def extract_num_unit(string_value):
+    string_value = str(string_value)
+    num = float('NaN')
+    cutout = len(string_value)
+    for i in range(1, len(string_value) + 1):
+        try:
+            num = float(string_value[:i])
+        except ValueError:
+            cutout = i - 1
+            break
+    return num, string_value[cutout:]
+
 def get_component_data(station):
     with transaction.atomic():
         component_data = []
@@ -86,18 +99,6 @@ def get_component_data(station):
             else:
                 median_timedelta = timedeltas[len(timedeltas) // 2]
             current_datetime = localtime(timezone.now())
-
-            def extract_num_unit(string_value):
-                string_value = str(string_value)
-                num = float('NaN')
-                cutout = len(string_value)
-                for i in range(1, len(string_value) + 1):
-                    try:
-                        num = float(string_value[:i])
-                    except ValueError:
-                        cutout = i - 1
-                        break
-                return num, string_value[cutout:]
 
             current_values_data = {}
             graphs_data = {}
@@ -247,7 +248,7 @@ def notify_maintainers(station, rules_broken):
         try:
             validate_email(maintainer.email)
             emails.append(maintainer.email)
-        except validate_email.ValidationError:
+        except ValidationError:
             pass
 
     subject = '[' + settings.SITE_NAME + '] Station notification'
@@ -266,23 +267,39 @@ def notify_maintainers(station, rules_broken):
     '''
 
 def check_rule(station, rule):
-    return
+    expression = rule.expression
+    expression_prepared = list(expression)
+    variable_regex = re.compile('\$\{([^}]*)\.([^}]*)\}')
+    offset = 0
+    for match in variable_regex.finditer(expression):
+        component_name = match.group(1)
+        member_name = match.group(2)
 
-    try:
-        expression_prepared = list(expression)
-        variable_regex = re.compile('\$\{[^}]*\}')
-        offset = 0
-        for match in variable_regex.finditer(expression):
-            expression_prepared[match.start() - offset : match.end() - offset] = 'x'
-            variable_count += 1
-            offset += match.end() - match.start() - 1
-        expression_prepared = ''.join(expression_prepared)
+        value = None
+        for component in Component.objects.filter(station=station.id):
+            if component.name.lower().replace(' ', '_') == component_name.lower().replace(' ', '_'):
+                for measurement_batch in MeasurementBatch.objects.filter(
+                component=component.id,
+                datetime__gt=(timezone.now() - timedelta(days=RECENT_MEASUREMENTS_DAYS))).order_by('datetime').reverse():
+                    for measurement in Measurement.objects.filter(batch=measurement_batch.id):
+                        if measurement.key.lower().replace(' ', '_') == member_name.lower().replace(' ', '_'):
+                            value, _ = extract_num_unit(measurement.value)
+                            break
+        if value == None:
+            return True
 
-        tree = ast.parse(expression_prepared)
-    except Exception:
-        return False
+        expression_prepared[match.start() - offset : match.end() - offset] = str(value)
+        offset += match.end() - match.start() - len(str(value))
+    expression_prepared = ''.join(expression_prepared)
 
-    return True
+    return eval(expression_prepared)
+
+def get_rules_broken(station):
+    rules_broken = []
+    for rule in StatusRule.objects.all():
+        if not check_rule(station, rule):
+            rules_broken.append(rule)
+    return rules_broken
 
 def update_status(station):
     previous_status = station.status
@@ -292,9 +309,7 @@ def update_status(station):
     elif len(get_errors(station)) > 0:
         status = Status.objects.get(name="Error(s) occured")
     else:
-        for rule in StatusRule.objects.all():
-            if not check_rule(station, rule):
-                rules_broken.append(rule)
+        rules_broken = get_rules_broken(station)
 
         if len(rules_broken) > 0:
             status = Status.objects.get(name="Rule(s) broken")
@@ -505,7 +520,7 @@ def rule_add(expression, message):
         if len(message) > 128: return False
 
         expression_prepared = list(expression)
-        variable_regex = re.compile('\$\{[^}]*\}')
+        variable_regex = re.compile('\$\{([^}]*)\.([^}]*)\}')
         variable_count = 0
         offset = 0
         for match in variable_regex.finditer(expression):
@@ -520,7 +535,39 @@ def rule_add(expression, message):
         (not isinstance(tree.body[0].value, ast.BoolOp) and not isinstance(tree.body[0].value, ast.Compare)):
             return False
 
-        #allowed_nodes = [ ast.Expr,  ]
+        allowed_nodes = [
+            ast.BoolOp, ast.BinOp, ast.UnaryOp, ast.Dict, ast.Set, ast.ListComp,
+            ast.SetComp, ast.DictComp, ast.Compare, ast.Num, ast.Str, ast.NameConstant,
+            ast.Constant, ast.Attribute, ast.Subscript, ast.Starred, ast.Name,
+            ast.List, ast.Tuple, ast.Load, ast.Store, ast.AugLoad,
+            ast.AugStore, ast.And, ast.Or, ast.Add, ast.Sub, ast.Mult, ast.MatMult, ast.Div,
+            ast.Mod, ast.Pow, ast.LShift, ast.RShift, ast.BitOr, ast.BitXor,
+            ast.BitAnd, ast.FloorDiv, ast.Invert, ast.Not, ast.UAdd, ast.USub,
+            ast.Eq, ast.NotEq, ast.Lt, ast.LtE, ast.Gt, ast.GtE, ast.Is,
+            ast.IsNot, ast.In, ast.NotIn
+        ]
+
+        class AllowedVisitor(ast.NodeVisitor):
+
+            def __init__(self):
+                self.allowed = True
+
+            def generic_visit(self, node):
+                found = False
+                for allowed_node in allowed_nodes:
+                    if isinstance(node, allowed_node):
+                        found = True
+                        break
+                if not found:
+                    self.allowed = False
+                else:
+                    ast.NodeVisitor.generic_visit(self, node)
+
+        allowed_visitor = AllowedVisitor()
+        allowed_visitor.visit(tree.body[0].value)
+        if not allowed_visitor.allowed:
+            return False
+
     except Exception:
         return False
 
