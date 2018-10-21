@@ -283,7 +283,11 @@ def check_rule(station, rule):
                 datetime__gt=(timezone.now() - timedelta(days=RECENT_MEASUREMENTS_DAYS))).order_by('datetime').reverse():
                     for measurement in Measurement.objects.filter(batch=measurement_batch.id):
                         if member_regex.fullmatch(measurement.key.lower().replace(' ', '_')) != None:
-                            value, _ = extract_num_unit(measurement.value)
+                            num, unit = extract_num_unit(measurement.value)
+                            if math.isnan(num):
+                                value = '\'' + unit + '\''
+                            else:
+                                value = num
                             break
         if value == None:
             return True

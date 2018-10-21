@@ -79,9 +79,9 @@
 {% endif %}
 {% if rules_broken|length > 0 %}
 <div class="subtitle">Rules Broken</div>
-<ul>
+<ul class="rules">
 {% for rule in rules_broken %}
-    <li class="rule">{{ rule.message }}</li>
+    <li>{{ rule.message }}</li>
 {% endfor %}
 </ul>
 <hr/>

@@ -86,6 +86,11 @@
     text-align: center;
 }
 
+.rules {
+    list-style-position: inside;
+    text-align: center;
+}
+
 .rule-input-label {
     width: 100%;
     text-align: center;

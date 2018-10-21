@@ -116,6 +116,7 @@
     width: 90%;
 }
 
-.rule {
+.rules {
+    list-style-position: inside;
     text-align: center;
 }
