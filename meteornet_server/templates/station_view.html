@@ -79,11 +79,13 @@
 {% endif %}
 {% if rules_broken|length > 0 %}
 <div class="subtitle">Rules Broken</div>
-<ul class="rules">
-{% for rule in rules_broken %}
-    <li>{{ rule.message }}</li>
-{% endfor %}
-</ul>
+<div class="rules-section">
+    <ul class="rules">
+    {% for rule in rules_broken %}
+        <li>{{ rule.message }}</li>
+    {% endfor %}
+    </ul>
+</div>
 <hr/>
 {% endif %}
 {% if maintainer_rows|length > 0 %}

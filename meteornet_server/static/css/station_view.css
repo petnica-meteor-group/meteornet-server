@@ -116,6 +116,10 @@
     width: 90%;
 }
 
+.rules-section {
+    width: 100%;
+}
+
 .rules {
     list-style-position: inside;
     text-align: center;
