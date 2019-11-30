@@ -46,7 +46,7 @@ class Station(Model):
     name = CharField(max_length=64, default='Test Station')
     latitude = FloatField(default=0.0)
     longitude = FloatField(default=0.0)
-    height = FloatField(default=0.0)
+    elevation = FloatField(default=0.0)
     comment = TextField(max_length=512, default='')
     maintainers = ManyToManyField(Person)
     last_updated = DateTimeField(default=timezone.now)

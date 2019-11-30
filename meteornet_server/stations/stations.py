@@ -18,6 +18,8 @@ import matplotlib
 matplotlib.use('WebAgg')
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mticker
+import seaborn as sns
+sns.set()
 import random
 import ast
 import re
@@ -356,7 +358,7 @@ def new_data(data):
             if 'timestamp' in data:
                 error.datetime = make_aware(datetime.fromtimestamp(int(data['timestamp'])))
             else:
-                error.datetime = datetime.now()
+                error.datetime = timezone.now()
             error.save()
         else:
             return False

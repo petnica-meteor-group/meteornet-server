@@ -124,7 +124,7 @@ def stations_overview(request):
             station_card['name'] = station.name
             station_card['latitude'] = station.latitude
             station_card['longitude'] = station.longitude
-            station_card['height'] = station.height
+            station_card['elevation'] = station.elevation
             station_card['last_updated'] = format_last_updated(station.last_updated)
 
             status_text, status_color = stations.get_status(station)
@@ -161,7 +161,7 @@ def administration(request):
             station_card['name'] = station.name
             station_card['latitude'] = station.latitude
             station_card['longitude'] = station.longitude
-            station_card['height'] = station.height
+            station_card['elevation'] = station.elevation
 
             station_cards.append(station_card)
 
