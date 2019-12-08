@@ -487,8 +487,8 @@ def new_data(data):
     return True
 
 def get_version():
-    from .station_code.internals import constants
-    return constants.VERSION
+    from .station_code.internals import config
+    return config.VERSION
 
 def get_code_filepath():
     return path.join(path.dirname(__file__), 'station_code.zip')
