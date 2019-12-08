@@ -305,7 +305,7 @@ def check_warning(station, warning):
 def get_warnings_issued(station):
     warnings_issued = []
     for warning in StatusWarning.objects.all():
-        if not check_warning(station, warning):
+        if check_warning(station, warning):
             warnings_issued.append(warning)
     return warnings_issued
 
