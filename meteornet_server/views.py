@@ -177,12 +177,12 @@ def administration(request):
     else:
         notes = AdministrationNotes.objects.all().first()
 
-    rules = stations.get_rules()
+    warnings = stations.get_warnings()
 
     context = {
         'registration_requests_rows' : registration_requests_rows,
         'notes' : notes.content,
-        'rules' : rules,
+        'warnings' : warnings,
         'settings' : settings }
     return render(request, 'administration.html', context)
 
@@ -253,14 +253,14 @@ def station_view(request, network_id):
 
             component['graphs_rows'].append(row)
 
-    rules_broken = stations.get_rules_broken(station)
+    warnings_issued = stations.get_warnings_issued(station)
 
     context = {
         'station' : station,
         'maintainer_rows' : maintainer_rows,
         'component_data' : component_data,
         'errors' : errors,
-        'rules_broken' : rules_broken,
+        'warnings_issued' : warnings_issued,
         'settings' : settings
     }
     return render(request, 'station_view.html', context)
@@ -330,18 +330,18 @@ def station_graph(request, graph):
 
 @require_http_methods(["POST"])
 @login_required
-def rule_delete(request):
-    if stations.rule_delete(int(request.POST.get('id', '-1'))):
-        messages.add_message(request, messages.SUCCESS, "Rule deleted")
+def warning_delete(request):
+    if stations.warning_delete(int(request.POST.get('id', '-1'))):
+        messages.add_message(request, messages.SUCCESS, "Warning deleted")
     return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
 @require_http_methods(["POST"])
 @login_required
-def rule_add(request):
+def warning_add(request):
     expression = request.POST.get('expression', '')
     message = request.POST.get('message', '')
-    if stations.rule_add(expression, message):
-        messages.add_message(request, messages.SUCCESS, "Rule added")
+    if stations.warning_add(expression, message):
+        messages.add_message(request, messages.SUCCESS, "Warning added")
     else:
-        messages.add_message(request, messages.ERROR, "Invalid rule")
+        messages.add_message(request, messages.ERROR, "Invalid warning")
     return HttpResponseRedirect(request.META.get('HTTP_REFERER'))

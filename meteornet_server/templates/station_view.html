@@ -77,12 +77,12 @@
 </dl>
 <hr/>
 {% endif %}
-{% if rules_broken|length > 0 %}
-<div class="subtitle">Rules Broken</div>
-<div class="rules-section">
-    <ul class="rules">
-    {% for rule in rules_broken %}
-        <li>{{ rule.message }}</li>
+{% if warnings_issued|length > 0 %}
+<div class="subtitle">Warnings Issued</div>
+<div class="warnings-section">
+    <ul class="warnings">
+    {% for warning in warnings_issued %}
+        <li>{{ warning.message }}</li>
     {% endfor %}
     </ul>
 </div>

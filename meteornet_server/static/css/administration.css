@@ -60,24 +60,24 @@
     margin: auto;
 }
 
-.btn-rule-delete, .btn-rule-delete:hover {
-    width: 120px;
+.btn-warning-delete, .btn-warning-delete:hover {
+    width: 170px;
     margin: auto;
     background-color: red;
 }
 
-.btn-rule-add {
-    width: 100px;
+.btn-warning-add {
+    width: 150px;
     margin: auto;
 }
 
-.rules-empty {
+.warnings-empty {
     font-size: 18px;
     text-align: center;
     width: 100%;
 }
 
-.rule {
+.warning {
     text-align: center;
 }
 
@@ -86,17 +86,17 @@
     text-align: center;
 }
 
-.rules {
+.warnings {
     list-style-position: inside;
     text-align: center;
 }
 
-.rule-input-label {
+.warning-input-label {
     width: 100%;
     text-align: center;
 }
 
-.rule-input, .rule-input:focus {
+.warning-input, .warning-input:focus {
     width: 70%;
     margin: auto;
     padding: 4px;

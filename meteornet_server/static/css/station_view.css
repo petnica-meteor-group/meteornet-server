@@ -116,12 +116,12 @@
     width: 90%;
 }
 
-.rules-section {
+.warnings-section {
     width: 100%;
     text-align: center;
 }
 
-.rules {
+.warnings {
     list-style-position: inside;
     text-align: center;
 }

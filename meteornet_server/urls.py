@@ -20,6 +20,6 @@ urlpatterns = [
     path('station_error_resolve', views.station_error_resolve, name='station_error_resolve'),
     path('station_delete', views.station_delete, name='station_delete'),
     path('station_graph/<graph>', views.station_graph, name='station_graph'),
-    path('rule_delete', views.rule_delete, name='rule_delete'),
-    path('rule_add', views.rule_add, name='rule_add'),
+    path('warning_delete', views.warning_delete, name='warning_delete'),
+    path('warning_add', views.warning_add, name='warning_add'),
 ]

@@ -17,7 +17,7 @@ def init_statuses():
         data = [
                 ("Good", '#00CC00'),
                 ("Not connecting", '#FFFF19'),
-                ("Rule(s) broken", '#FFA500'),
+                ("Warning(s) issued", '#FFA500'),
                 ("Error(s) occured", '#CC0000'),
                 ("Disconnected", '#990000'),
         ]
@@ -28,18 +28,18 @@ def init_statuses():
             status.severity = i
             status.save()
 
-def get_status_rule_broken():
+def get_status_warning_issued():
     init_statuses()
-    return Status.objects.get(name="Rule(s) broken").id
+    return Status.objects.get(name="Warning(s) issued").id
 
 def get_status_default():
     init_statuses()
     return Status.objects.get(name="Good").id
 
-class StatusRule(Model):
+class StatusWarning(Model):
     expression = CharField(max_length=256)
     message = CharField(max_length=128)
-    status = ForeignKey(Status, default=get_status_rule_broken, on_delete=CASCADE)
+    status = ForeignKey(Status, default=get_status_warning_issued, on_delete=CASCADE)
 
 class Station(Model):
     network_id = CharField(max_length=64)

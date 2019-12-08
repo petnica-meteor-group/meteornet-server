@@ -246,7 +246,7 @@ def registration_resolve(network_id, approve):
         pass
     return False
 
-def notify_maintainers(station, rules_broken):
+def notify_maintainers(station, warnings_issued):
     emails = []
     for maintainer in station.maintainers.all():
         try:
@@ -257,8 +257,8 @@ def notify_maintainers(station, rules_broken):
 
     subject = '[' + settings.SITE_NAME + '] Station notification'
     message = station.name + ' status changed to ' + station.status.name + '!\n\n'
-    for rule_broken in rules_broken:
-        message += '\t- ' + rule_broken.message + '\n'
+    for warning_issued in warnings_issued:
+        message += '\t- ' + warning_issued.message + '\n'
 
     '''
     mail.send_mail(
@@ -270,8 +270,8 @@ def notify_maintainers(station, rules_broken):
     )
     '''
 
-def check_rule(station, rule):
-    expression = rule.expression
+def check_warning(station, warning):
+    expression = warning.expression
     expression_prepared = list(expression)
     variable_regex = re.compile('\$\{([^}]*)\.([^}]*)\}')
     offset = 0
@@ -302,25 +302,25 @@ def check_rule(station, rule):
 
     return eval(expression_prepared)
 
-def get_rules_broken(station):
-    rules_broken = []
-    for rule in StatusRule.objects.all():
-        if not check_rule(station, rule):
-            rules_broken.append(rule)
-    return rules_broken
+def get_warnings_issued(station):
+    warnings_issued = []
+    for warning in StatusWarning.objects.all():
+        if not check_warning(station, warning):
+            warnings_issued.append(warning)
+    return warnings_issued
 
 def update_status(station):
     previous_status = station.status
-    rules_broken = []
+    warnings_issued = []
     if (timezone.now() - station.last_updated).total_seconds() // 3600 > DISCONNECTED_HOURS:
         status = Status.objects.get(name="Disconnected")
     elif len(get_errors(station)) > 0:
         status = Status.objects.get(name="Error(s) occured")
     else:
-        rules_broken = get_rules_broken(station)
+        warnings_issued = get_warnings_issued(station)
 
-        if len(rules_broken) > 0:
-            status = Status.objects.get(name="Rule(s) broken")
+        if len(warnings_issued) > 0:
+            status = Status.objects.get(name="Warning(s) issued")
         elif (timezone.now() - station.last_updated).total_seconds() // 3600 > NOT_CONNECTING_HOURS:
             status = Status.objects.get(name="Not connecting")
         else:
@@ -328,7 +328,7 @@ def update_status(station):
     station.status = status
 
     if station.status.severity > previous_status.severity:
-        notify_maintainers(station, rules_broken)
+        notify_maintainers(station, warnings_issued)
 
     station.save()
 
@@ -514,15 +514,15 @@ def delete(network_id):
 def get_graph_path(graph):
     return path.join('/tmp', graph)
 
-def rule_delete(id):
+def warning_delete(id):
     try:
-        StatusRule.objects.get(id=id).delete()
+        StatusWarning.objects.get(id=id).delete()
         return True
     except Exception:
         pass
     return False
 
-def rule_add(expression, message):
+def warning_add(expression, message):
     try:
         if len(expression) > 256: return False
         if len(message) > 128: return False
@@ -579,12 +579,12 @@ def rule_add(expression, message):
     except Exception:
         return False
 
-    rule = StatusRule()
-    rule.expression = expression
-    rule.message = message
-    rule.save()
+    warning = StatusWarning()
+    warning.expression = expression
+    warning.message = message
+    warning.save()
 
     return True
 
-def get_rules():
-    return StatusRule.objects.all()
+def get_warnings():
+    return StatusWarning.objects.all()
