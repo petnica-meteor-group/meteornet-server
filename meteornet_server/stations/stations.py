@@ -18,6 +18,8 @@ import matplotlib
 matplotlib.use('WebAgg')
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mticker
+from pandas.plotting import register_matplotlib_converters
+register_matplotlib_converters()
 import seaborn as sns
 sns.set()
 import random
