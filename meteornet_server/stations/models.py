@@ -47,7 +47,7 @@ class Station(Model):
     latitude = FloatField(default=0.0)
     longitude = FloatField(default=0.0)
     elevation = FloatField(default=0.0)
-    comment = TextField(max_length=512, default='')
+    info = TextField(max_length=512, default='')
     maintainers = ManyToManyField(Person)
     last_updated = DateTimeField(default=timezone.now)
     approved = BooleanField(default=False)

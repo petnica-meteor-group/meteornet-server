@@ -32,7 +32,7 @@
                     {% csrf_token %}
                     <input type="hidden" name="network_id" value="{{ station_card.network_id }}" />
                     <input type="hidden" name="approve" value="False" />
-                    <button type="submit" class="btn btn-block btn-disapprove">Disapprove</button>
+                    <button type="submit" class="btn btn-block btn-reject">Reject</button>
                 </form>
             </div>
         </div>

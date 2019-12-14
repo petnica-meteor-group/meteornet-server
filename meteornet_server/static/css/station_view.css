@@ -75,9 +75,16 @@
     width: 100%;
     text-align: center;
     font-size: 16px;
+    margin-bottom: 10px;
 }
 
-.comment {
+.last-updated {
+    width: 100%;
+    text-align: center;
+    font-size: 12px;
+}
+
+.info {
     width: 100%;
     text-align: center;
     font-size: 16px;
@@ -101,7 +108,7 @@
 
 .card-component {
     margin-bottom: 16px;
-    min-height: 100px;
+    min-height: 50px;
 }
 
 .component-name {

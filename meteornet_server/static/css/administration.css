@@ -31,13 +31,13 @@
     background-color: #00BB00;
 }
 
-.btn-disapprove {
+.btn-reject {
     font-size: 14px;
     width: 70%;
     margin: auto;
 }
 
-.btn-disapprove:hover {
+.btn-reject:hover {
     background-color: red;
 }
 

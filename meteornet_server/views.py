@@ -257,6 +257,7 @@ def station_view(request, network_id):
 
     context = {
         'station' : station,
+        'last_updated' : format_last_updated(station.last_updated),
         'maintainer_rows' : maintainer_rows,
         'component_data' : component_data,
         'errors' : errors,

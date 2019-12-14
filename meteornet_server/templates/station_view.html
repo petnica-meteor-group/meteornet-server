@@ -49,9 +49,12 @@
     </div>
 </div>
 <div class="status">Status: <span style="color: {{ station.status.color }};">{{ station.status.name }}</span></div>
+<div class="last-updated">Last updated: {{ last_updated }}</div>
+{% if station.info|length > 0 %}
 <br/>
-<div class="comment">{{ station.comment }}</div>
-<br/>
+<div class="info">Extra information:<br/>{{ station.info }}</div>
+{% endif %}
+<hr/>
 <button class="btn btn-block btn-show-map" data-toggle="collapse" data-target="#show-map" onclick="openMap()">Show On Map</button>
 <div id="show-map" class="collapse">
     <br/>
@@ -107,7 +110,6 @@
     <div class="col-{{ row.sidecol_size }}"></div>
 </div>
 {% endfor %}
-<br/>
 <hr/>
 {% endif %}
 {% if component_data|length > 0 %}
@@ -119,6 +121,7 @@
             <div class="card-header">
                 <div class="component-name">{{ component.name }}</div>
             </div>
+            {% if component.current_values_rows|length > 0 or component.graphs_rows|length > 0 %}
             <div class="card-body">
                 {% for row in component.current_values_rows %}
                 <div class="row">
@@ -149,6 +152,7 @@
                 </div>
                 {% endif %}
             </div>
+            {% endif %}
         </div>
     </div>
 </div>
