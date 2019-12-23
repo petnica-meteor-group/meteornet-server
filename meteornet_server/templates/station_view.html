@@ -171,7 +171,7 @@
             <div class="modal-footer">
                 <form method="post" action="/station_delete">
                     {% csrf_token %}
-                    <input type="hidden" name="network_id" value="{{ station.network_id }}" />
+                    <input type="hidden" name="security_token" value="{{ station.security_token }}" />
                     <button type="submit" class="btn btn-block btn-delete">Yes</button>
                 </form>
                 <button type="button" class="btn btn-default btn-no" data-dismiss="modal">No</button>

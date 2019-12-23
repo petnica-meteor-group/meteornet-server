@@ -120,7 +120,8 @@ def stations_overview(request):
             station = station_list[i + j]
 
             station_card = {}
-            station_card['network_id'] = station.network_id
+            station_card['id'] = station.id
+            station_card['security_token'] = station.security_token
             station_card['name'] = station.name
             station_card['latitude'] = station.latitude
             station_card['longitude'] = station.longitude
@@ -157,7 +158,7 @@ def administration(request):
             station = unapproved_stations[i + j]
 
             station_card = {}
-            station_card['network_id'] = station.network_id
+            station_card['security_token'] = station.security_token
             station_card['name'] = station.name
             station_card['latitude'] = station.latitude
             station_card['longitude'] = station.longitude
@@ -196,8 +197,8 @@ def administration_notes_update(request):
 
 @require_http_methods(["GET"])
 @login_required
-def station_view(request, network_id):
-    station = stations.get(network_id)
+def station_view(request, station_id):
+    station = stations.get_by_id(station_id)
     errors = stations.get_errors(station)
     maintainers = stations.get_maintainers(station)
 
@@ -277,7 +278,7 @@ def station_register(request):
 @require_http_methods(["POST"])
 @login_required
 def station_registration_resolve(request):
-    stations.registration_resolve(request.POST.get('network_id', ''), request.POST.get('approve', None) == 'True')
+    stations.registration_resolve(request.POST.get('security_token', ''), request.POST.get('approve', None) == 'True')
     return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
 @require_http_methods(["POST"])
@@ -316,7 +317,7 @@ def station_error_resolve(request):
 @require_http_methods(["POST"])
 @login_required
 def station_delete(request):
-    if stations.delete(request.POST.get('network_id', '')):
+    if stations.delete(request.POST.get('security_token', '')):
         return redirect('/stations_overview')
     else:
         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))

@@ -42,7 +42,7 @@ class StatusWarning(Model):
     status = ForeignKey(Status, default=get_status_warning_issued, on_delete=CASCADE)
 
 class Station(Model):
-    network_id = CharField(max_length=64)
+    security_token = CharField(max_length=64)
     name = CharField(max_length=64, default='Test Station')
     latitude = FloatField(default=0.0)
     longitude = FloatField(default=0.0)

@@ -45,8 +45,11 @@ def get_status(station):
 def get_unapproved():
     return Station.objects.filter(approved=False)
 
-def get(network_id):
-    return get_object_or_404(Station, network_id=network_id)
+def get_by_security_token(security_token):
+    return get_object_or_404(Station, security_token=security_token)
+
+def get_by_id(id):
+    return get_object_or_404(Station, id=id)
 
 def get_errors(station):
     errors = []
@@ -185,7 +188,7 @@ def get_component_data(station):
 
             graphs = []
             for key in graphs_data:
-                graph = (station.network_id + component['name'] + key).replace(' ', '_') + '.png'
+                graph = (station.security_token + component['name'] + key).replace(' ', '_') + '.png'
                 data = graphs_data[key]
                 color = [ random.uniform(0, 1), random.uniform(0, 1), random.uniform(0, 1) ]
                 plt.figure(figsize=(12, 5))
@@ -226,16 +229,16 @@ def register(data):
             except ValueError:
                 pass
     if 'timestamp' in data: station.last_updated = make_aware(datetime.fromtimestamp(int(data['timestamp'])))
-    network_id = uuid.uuid4().hex
-    station.network_id = network_id
+    security_token = uuid.uuid4().hex
+    station.security_token = security_token
     station.approved = False
     station.save()
 
-    return network_id
+    return security_token
 
-def registration_resolve(network_id, approve):
+def registration_resolve(security_token, approve):
     try:
-        station = Station.objects.get(network_id=network_id)
+        station = Station.objects.get(security_token=security_token)
         if approve:
             station.approved = approve
             station.save()
@@ -343,7 +346,7 @@ def delete_old_data():
 
 def new_data(data):
     try:
-        station = Station.objects.get(network_id=data['network_id'])
+        station = Station.objects.get(security_token=data['security_token'])
         if not station.approved:
             return True
     except Exception:
@@ -503,9 +506,9 @@ def error_resolve(id):
         pass
     return False
 
-def delete(network_id):
+def delete(security_token):
     try:
-        Station.objects.get(network_id=network_id).delete()
+        Station.objects.get(security_token=security_token).delete()
         return True
     except Exception:
         pass

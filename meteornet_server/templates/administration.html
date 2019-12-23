@@ -24,13 +24,13 @@
             <div class="card-body">
                 <form method="post" action="/station_registration_resolve">
                     {% csrf_token %}
-                    <input type="hidden" name="network_id" value="{{ station_card.network_id }}" />
+                    <input type="hidden" name="security_token" value="{{ station_card.security_token }}" />
                     <input type="hidden" name="approve" value="True" />
                     <button type="submit" class="btn btn-block btn-approve">Approve</button>
                 </form>
                 <form method="post" action="/station_registration_resolve">
                     {% csrf_token %}
-                    <input type="hidden" name="network_id" value="{{ station_card.network_id }}" />
+                    <input type="hidden" name="security_token" value="{{ station_card.security_token }}" />
                     <input type="hidden" name="approve" value="False" />
                     <button type="submit" class="btn btn-block btn-reject">Reject</button>
                 </form>

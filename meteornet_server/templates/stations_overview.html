@@ -11,7 +11,7 @@
 <div class="row">
     {% for station_card in row.station_cards %}
     <div class="col-{{ row.col_size }}">
-        <a href="{% url 'station_view' network_id=station_card.network_id %}">
+        <a href="{% url 'station_view' station_id=station_card.id %}">
             <div class="card">
                 <div class="card-header">
                     <div class="station-name">{{ station_card.name }}</div>
