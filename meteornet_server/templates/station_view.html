@@ -45,7 +45,7 @@
 <div class="title">
     Station {{ station.name }}<br/>
     <div class="coordinates">
-        ϕ: {{ station.latitude|floatformat:4 }}, λ: {{ station.longitude|floatformat:4 }}, Elevation: {{ station.elevation|floatformat:2 }}m
+        ϕ: {{ station.latitude|floatformat:4 }}°, λ: {{ station.longitude|floatformat:4 }}°, Elevation: {{ station.elevation|floatformat:2 }}m
     </div>
 </div>
 <div class="status">Status: <span style="color: {{ station.status.color }};">{{ station.status.name }}</span></div>
